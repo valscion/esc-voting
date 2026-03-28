@@ -8,6 +8,8 @@ declare namespace Cloudflare {
 	interface Env {
 		ASSETS: Fetcher;
 		DATABASE: DurableObjectNamespace<import("./src/worker").Database>;
+		/** Set via `wrangler secret put SEED_SECRET` or Cloudflare dashboard */
+		SEED_SECRET?: string;
 	}
 }
 interface Env extends Cloudflare.Env {}
