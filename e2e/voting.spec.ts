@@ -150,8 +150,8 @@ test.describe("ESC Voting App", () => {
       await heartButton.click();
       await expect(heartButton).toHaveAttribute("aria-pressed", "true");
 
-      // Wait a moment for the server action to complete
-      await page.waitForTimeout(1000);
+      // Wait for the server action to complete by checking the button is no longer in a pending state
+      await expect(page.locator('[role="group"]').first()).not.toHaveCSS("opacity", "0.6");
 
       // Reload the page
       await page.reload();

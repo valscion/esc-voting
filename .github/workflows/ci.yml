@@ -58,7 +58,9 @@ jobs:
           pnpm run seed
 
       - name: Run e2e tests
-        run: CI= pnpm run test:e2e
+        run: pnpm run test:e2e
+        env:
+          CI: ""
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
