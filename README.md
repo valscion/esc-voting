@@ -61,12 +61,12 @@ wrangler secret put AIRTABLE_BASE_ID
 ## Development
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 ## Deploy
 
 ```bash
-npm run release
+pnpm run release
 ```

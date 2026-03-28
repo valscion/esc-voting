@@ -11,44 +11,36 @@ export const Home = async ({ ctx }: { ctx: AppContext }) => {
   const totalSongs = songs.length;
 
   return (
-    <main style={{ fontFamily: "sans-serif", maxWidth: "600px", margin: "0 auto", padding: "2rem" }}>
-      <h1 style={{ fontSize: "2rem", marginBottom: "0.25rem" }}>
+    <main className="mx-auto max-w-xl px-6 py-8">
+      <h1 className="text-3xl font-bold text-indigo-900">
         🎤 ESC Voting
       </h1>
-      <p style={{ color: "#666", marginBottom: "2rem" }}>
+      <p className="mt-1 text-mauve-600">
         Rate all {totalSongs} competing songs before the semi-finals air!
         Each person picks from five reactions for every country.
       </p>
 
-      <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>Choose your voter profile</h2>
+      <h2 className="mt-8 text-lg font-semibold text-mauve-900">Choose your voter profile</h2>
 
       {voters.length === 0 ? (
-        <p style={{ color: "#999" }}>
+        <p className="mt-4 text-mauve-400">
           No voters found. Add voter names to the &quot;Voters&quot; table in Airtable.
         </p>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        <ul className="mt-4 flex flex-col gap-3">
           {voters.map((voter) => {
             const voterVotes = votes.filter((v) => v.voter === voter.name);
             const rated = voterVotes.length;
+            const allDone = rated === totalSongs && totalSongs > 0;
             return (
               <li key={voter.id}>
                 <a
                   href={`/vote/${encodeURIComponent(voter.name)}`}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "1rem 1.25rem",
-                    border: "2px solid #e0e0e0",
-                    borderRadius: "12px",
-                    textDecoration: "none",
-                    color: "inherit",
-                  }}
+                  className="flex items-center justify-between rounded-xl border-2 border-mauve-200 px-5 py-4 no-underline transition-colors hover:border-indigo-400 hover:bg-indigo-50"
                 >
-                  <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>{voter.name}</span>
-                  <span style={{ color: rated === totalSongs && totalSongs > 0 ? "#22c55e" : "#888", fontSize: "0.9rem" }}>
-                    {rated}/{totalSongs} rated {rated === totalSongs && totalSongs > 0 ? "✅" : ""}
+                  <span className="text-lg font-semibold text-mauve-900">{voter.name}</span>
+                  <span className={`text-sm ${allDone ? "text-green-600" : "text-mauve-500"}`}>
+                    {rated}/{totalSongs} rated {allDone ? "✅" : ""}
                   </span>
                 </a>
               </li>
@@ -58,7 +50,7 @@ export const Home = async ({ ctx }: { ctx: AppContext }) => {
       )}
 
       {songs.length === 0 && (
-        <p style={{ color: "#999", marginTop: "2rem" }}>
+        <p className="mt-8 text-mauve-400">
           No songs found. Add country entries to the &quot;Songs&quot; table in Airtable.
         </p>
       )}

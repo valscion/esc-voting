@@ -29,13 +29,7 @@ export function RatingButtons({
 
   return (
     <div
-      style={{
-        display: "flex",
-        gap: "0.25rem",
-        flexShrink: 0,
-        opacity: isPending ? 0.6 : 1,
-        transition: "opacity 0.15s",
-      }}
+      className={`flex shrink-0 gap-1 transition-opacity ${isPending ? "opacity-60" : "opacity-100"}`}
       role="group"
       aria-label={`Rate ${country}`}
     >
@@ -47,17 +41,11 @@ export function RatingButtons({
           title={RATINGS[emoji]}
           aria-label={`${emoji} – ${RATINGS[emoji]}`}
           aria-pressed={selected === emoji}
-          style={{
-            fontSize: "1.5rem",
-            lineHeight: 1,
-            padding: "0.25rem",
-            border: "2px solid",
-            borderColor: selected === emoji ? "#6366f1" : "transparent",
-            borderRadius: "8px",
-            background: selected === emoji ? "#eef2ff" : "transparent",
-            cursor: isPending ? "not-allowed" : "pointer",
-            transition: "border-color 0.15s, background 0.15s",
-          }}
+          className={`rounded-lg border-2 p-1 text-2xl leading-none transition-colors ${
+            selected === emoji
+              ? "border-indigo-500 bg-indigo-50"
+              : "border-transparent bg-transparent hover:bg-mauve-100"
+          } ${isPending ? "cursor-not-allowed" : "cursor-pointer"}`}
         >
           {emoji}
         </button>

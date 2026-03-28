@@ -21,39 +21,24 @@ export const VotePage = async ({
 
   const rated = votes.length;
   const total = songs.length;
+  const allDone = rated === total && total > 0;
 
   return (
-    <main
-      style={{
-        fontFamily: "sans-serif",
-        maxWidth: "700px",
-        margin: "0 auto",
-        padding: "1.5rem",
-      }}
-    >
-      <nav style={{ marginBottom: "1.5rem" }}>
-        <a href="/" style={{ color: "#666", textDecoration: "none", fontSize: "0.9rem" }}>
+    <main className="mx-auto max-w-2xl px-4 py-6">
+      <nav className="mb-6">
+        <a href="/" className="text-sm text-mauve-500 no-underline hover:text-indigo-600">
           ← Back to voter list
         </a>
       </nav>
 
-      <h1 style={{ fontSize: "1.8rem", marginBottom: "0.25rem" }}>
+      <h1 className="text-2xl font-bold text-indigo-900">
         🎤 {voterName}&apos;s Votes
       </h1>
-      <p style={{ color: "#666", marginBottom: "0.5rem" }}>
+      <p className="mt-1 text-mauve-600">
         Rate each competing country using the five reactions below.
       </p>
 
-      <div
-        style={{
-          display: "flex",
-          gap: "0.5rem",
-          flexWrap: "wrap",
-          marginBottom: "1.5rem",
-          fontSize: "0.85rem",
-          color: "#555",
-        }}
-      >
+      <div className="mt-4 flex flex-wrap gap-2 text-xs text-mauve-500">
         {(Object.entries(RATINGS) as [RatingEmoji, string][]).map(
           ([emoji, label]) => (
             <span key={emoji}>
@@ -64,47 +49,29 @@ export const VotePage = async ({
       </div>
 
       <div
-        style={{
-          marginBottom: "1rem",
-          padding: "0.5rem 1rem",
-          background: rated === total && total > 0 ? "#dcfce7" : "#f5f5f5",
-          borderRadius: "8px",
-          fontSize: "0.9rem",
-          color: rated === total && total > 0 ? "#166534" : "#555",
-        }}
+        className={`mt-4 rounded-lg px-4 py-2 text-sm ${
+          allDone
+            ? "bg-green-100 text-green-800"
+            : "bg-mauve-100 text-mauve-600"
+        }`}
       >
         {rated}/{total} countries rated{" "}
-        {rated === total && total > 0 ? "🎉 All done!" : ""}
+        {allDone ? "🎉 All done!" : ""}
       </div>
 
-      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+      <ul className="mt-4">
         {songs.map((song) => {
           const currentRating = voteMap.get(song.country);
           return (
             <li
               key={song.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "0.75rem 0",
-                borderBottom: "1px solid #f0f0f0",
-                gap: "1rem",
-              }}
+              className="flex items-center justify-between gap-4 border-b border-mauve-100 py-3"
             >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: "1rem" }}>
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-mauve-900">
                   {song.flag} {song.country}
                 </div>
-                <div
-                  style={{
-                    color: "#666",
-                    fontSize: "0.85rem",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                <div className="truncate text-sm text-mauve-500">
                   {song.artist} – {song.song}
                 </div>
               </div>
@@ -119,7 +86,7 @@ export const VotePage = async ({
       </ul>
 
       {songs.length === 0 && (
-        <p style={{ color: "#999", marginTop: "2rem" }}>
+        <p className="mt-8 text-mauve-400">
           No songs found. Add country entries to the &quot;Songs&quot; table in
           Airtable.
         </p>
