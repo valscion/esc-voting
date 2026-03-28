@@ -1,11 +1,10 @@
-import { getVoters, getSongs, getAllVotes } from "@/app/airtable";
-import type { AppContext } from "@/worker";
+import { getVoters, getSongs, getAllVotes } from "@/app/data";
 
-export const Home = async ({ ctx }: { ctx: AppContext }) => {
+export const Home = async () => {
   const [voters, songs, votes] = await Promise.all([
-    getVoters(ctx.env),
-    getSongs(ctx.env),
-    getAllVotes(ctx.env),
+    getVoters(),
+    getSongs(),
+    getAllVotes(),
   ]);
 
   const totalSongs = songs.length;

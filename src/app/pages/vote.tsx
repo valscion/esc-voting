@@ -1,18 +1,15 @@
-import { getSongs, getVotesForVoter, RATINGS, type RatingEmoji } from "@/app/airtable";
-import type { AppContext } from "@/worker";
+import { getSongs, getVotesForVoter, RATINGS, type RatingEmoji } from "@/app/data";
 import { RatingButtons } from "./rating-buttons";
 
 export const VotePage = async ({
-  ctx,
   params,
 }: {
-  ctx: AppContext;
   params: { voterName: string };
 }) => {
   const voterName = decodeURIComponent(params.voterName);
   const [songs, votes] = await Promise.all([
-    getSongs(ctx.env),
-    getVotesForVoter(ctx.env, voterName),
+    getSongs(),
+    getVotesForVoter(voterName),
   ]);
 
   const voteMap = new Map<string, RatingEmoji>(

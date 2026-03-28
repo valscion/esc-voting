@@ -5,25 +5,13 @@ import { Document } from "@/app/document";
 import { setCommonHeaders } from "@/app/headers";
 import { Home } from "@/app/pages/home";
 import { VotePage } from "@/app/pages/vote";
-import { getEnv, runWithEnv } from "@/app/env-store";
 
-export type AppContext = {
-  env: Env;
-};
+export { Database } from "@/db/durableObject";
 
-const _app = defineApp([
+export default defineApp([
   setCommonHeaders(),
-  ({ ctx }) => {
-    (ctx as AppContext).env = getEnv();
-  },
   render(Document, [
     route("/", Home),
     route("/vote/:voterName", VotePage),
   ]),
 ]);
-
-export default {
-  fetch(request: Request, env: Env, cf: ExecutionContext): Promise<Response> {
-    return runWithEnv(env, () => _app.fetch(request, env, cf));
-  },
-};

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { submitVote } from "@/app/actions";
-import { RATINGS, type RatingEmoji } from "@/app/airtable";
+import { RATINGS, type RatingEmoji } from "@/app/shared/constants";
 
 interface RatingButtonsProps {
   voterName: string;

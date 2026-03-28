@@ -22,10 +22,19 @@
     "enabled": true
   },
 
-  // Environment variables
-  "vars": {
-    // Add your Airtable API key and base ID here (or use .dev.vars for local dev)
-    // "AIRTABLE_API_KEY": "",
-    // "AIRTABLE_BASE_ID": ""
-  }
+  // Durable Objects
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "DATABASE",
+        "class_name": "Database"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["Database"]
+    }
+  ]
 }
