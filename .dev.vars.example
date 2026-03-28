@@ -1,0 +1,4 @@
+# Optional: protects the /api/seed endpoint in production.
+# Set via Cloudflare dashboard or wrangler secret put SEED_SECRET.
+# When unset (local dev), seeding works without auth.
+# SEED_SECRET=some-random-secret-here
