@@ -1,0 +1,31 @@
+{
+  // Schema reference for wrangler configuration
+  "$schema": "node_modules/wrangler/config-schema.json",
+
+  // Name of your worker
+  "name": "esc-voting",
+
+  // Entry point for your worker
+  "main": "src/worker.tsx",
+
+  // Compatibility settings
+  "compatibility_date": "2025-08-21",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Assets configuration
+  "assets": {
+    "binding": "ASSETS"
+  },
+
+  // Observability settings
+  "observability": {
+    "enabled": true
+  },
+
+  // Environment variables
+  "vars": {
+    // Add your Airtable API key and base ID here (or use .dev.vars for local dev)
+    // "AIRTABLE_API_KEY": "",
+    // "AIRTABLE_BASE_ID": ""
+  }
+}
