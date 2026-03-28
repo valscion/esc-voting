@@ -39,61 +39,52 @@ pnpm run test:e2e
 pnpm run test:e2e
 ```
 
-## Deploy from Phone (GitHub Actions)
+## Production Setup
 
-This project is designed to be deployed and managed entirely from a phone — no CLI needed. Everything is done through the GitHub and Cloudflare web dashboards.
+This project is designed to be deployed and managed entirely from a phone — no CLI needed. Deployment is handled by Cloudflare's GitHub integration (auto-deploys on push), and database seeding is done via a GitHub Actions workflow.
 
-### 1. Set up Cloudflare
+### 1. Deploy via Cloudflare
 
 1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) and sign up or log in
-2. Note your **Account ID** (visible in the sidebar or URL on any Workers page)
-3. Create an **API Token**:
-   - Go to **My Profile** → **API Tokens** → **Create Token**
-   - Use the **"Edit Cloudflare Workers"** template
-   - Save the generated token
-4. Generate a **seed secret** — any random string (e.g. use a password generator). This protects the seed endpoint in production.
+2. Go to **Workers & Pages** → **Create** → **Import a repository**
+3. Connect your GitHub account and select this repository
+4. Cloudflare will auto-deploy on every push to `main`
+5. Add the `SEED_SECRET` environment variable to your Worker:
+   - Go to your Worker's **Settings** → **Variables and Secrets**
+   - Add a secret named `SEED_SECRET` with a random string value (e.g. use a password generator). This protects the seed endpoint in production.
 
-### 2. Set up GitHub secrets and variables
+### 2. Set up GitHub for seeding
 
 In your GitHub repo, go to **Settings** → **Secrets and variables** → **Actions**:
 
-**Secrets** (tap "New repository secret" for each):
+**Secrets** (tap "New repository secret"):
 
-| Secret name              | Value                                     |
-| ------------------------ | ----------------------------------------- |
-| `CLOUDFLARE_ACCOUNT_ID`  | Your Cloudflare Account ID                |
-| `CLOUDFLARE_API_TOKEN`   | The API token from step 1                 |
-| `SEED_SECRET`            | The random seed secret from step 1        |
+| Secret name   | Value                              |
+| ------------- | ---------------------------------- |
+| `SEED_SECRET` | Same seed secret as in Cloudflare  |
 
 **Variables** (switch to the "Variables" tab, tap "New repository variable"):
 
-| Variable name  | Value                                             |
-| -------------- | ------------------------------------------------- |
-| `WORKER_URL`   | `https://esc-voting.<your-subdomain>.workers.dev` |
+| Variable name | Value                                             |
+| ------------- | ------------------------------------------------- |
+| `WORKER_URL`  | `https://esc-voting.<your-subdomain>.workers.dev` |
 
 > **How to find your Workers subdomain**: In the Cloudflare dashboard, go to **Workers & Pages** → **Overview**. Your subdomain is shown at the top (e.g. `your-name.workers.dev`). The full URL will be `https://esc-voting.your-name.workers.dev`.
 
-### 3. Deploy and seed
+### 3. Seed the database
 
-1. In your GitHub repo, go to **Actions** → **Deploy** workflow
+After deploying, seed the production database with ESC 2025 songs and voters:
+
+1. In your GitHub repo, go to **Actions** → **Seed Database** workflow
 2. Tap **Run workflow**
-3. Check the **"Seed the database"** checkbox for the first deploy
-4. Tap **Run workflow** to start
-
-The workflow will:
-- Deploy the worker to Cloudflare (Durable Objects are auto-configured)
-- Set the `SEED_SECRET` as a Cloudflare Worker secret
-- Seed the database with ESC 2025 songs and voters (if checkbox was checked)
-
-Future pushes to `main` will auto-deploy without seeding.
+3. Tap **Run workflow** again to start
 
 ### 4. Re-seeding (resets all votes!)
 
 To re-seed the database (e.g. after changing the song list):
 
-1. Go to **Actions** → **Deploy** → **Run workflow**
-2. Check the **"Seed the database"** checkbox
-3. Run — this clears all existing votes and re-inserts songs + voters
+1. Go to **Actions** → **Seed Database** → **Run workflow**
+2. Run — this clears all existing votes and re-inserts songs + voters
 
 ## CLI Deploy (alternative)
 
