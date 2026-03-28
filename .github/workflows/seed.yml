@@ -1,0 +1,38 @@
+name: Seed Database
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    name: Seed Database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Seed production database
+        env:
+          SEED_SECRET: ${{ secrets.SEED_SECRET }}
+          WORKER_URL: ${{ vars.WORKER_URL }}
+        run: |
+          if [ -z "$WORKER_URL" ]; then
+            echo "::error::WORKER_URL variable is not set. Add it in repo Settings → Variables → Actions."
+            exit 1
+          fi
+
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer ${SEED_SECRET}" \
+            "${WORKER_URL}/api/seed")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response: $body"
+          echo "HTTP Status: $http_code"
+
+          if [ "$http_code" != "200" ]; then
+            echo "::error::Seed failed with HTTP $http_code"
+            exit 1
+          fi
+
+          echo "✅ Database seeded successfully!"
