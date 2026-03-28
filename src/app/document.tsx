@@ -11,7 +11,7 @@ export const Document: React.FC<{ children: React.ReactNode }> = ({
       <link rel="stylesheet" href={styles} />
       <link rel="modulepreload" href="/src/client.tsx" />
     </head>
-    <body className="bg-mauve-50 text-mauve-950 antialiased">
+    <body className="min-h-screen bg-gray-950 text-gray-100 antialiased">
       {children}
       <script>import("/src/client.tsx")</script>
     </body>

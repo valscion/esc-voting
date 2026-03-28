@@ -10,23 +10,23 @@ export const Home = async () => {
   const totalSongs = songs.length;
 
   return (
-    <main className="mx-auto max-w-xl px-6 py-8">
-      <h1 className="text-3xl font-bold text-indigo-900">
+    <main className="mx-auto max-w-xl px-6 py-10">
+      <h1 className="text-3xl font-bold text-indigo-300">
         🎤 ESC Voting
       </h1>
-      <p className="mt-1 text-mauve-600">
+      <p className="mt-2 text-gray-400">
         Rate all {totalSongs} competing songs before the semi-finals air!
         Each person picks from five reactions for every country.
       </p>
 
-      <h2 className="mt-8 text-lg font-semibold text-mauve-900">Choose your voter profile</h2>
+      <h2 className="mt-10 text-lg font-semibold text-gray-200">Choose your voter profile</h2>
 
       {voters.length === 0 ? (
-        <p className="mt-4 text-mauve-400">
-          No voters found. Add voter names to the &quot;Voters&quot; table in Airtable.
+        <p className="mt-4 text-gray-500">
+          No voters found. Run the seed script to add voters.
         </p>
       ) : (
-        <ul className="mt-4 flex flex-col gap-3">
+        <ul className="mt-5 flex flex-col gap-3">
           {voters.map((voter) => {
             const voterVotes = votes.filter((v) => v.voter === voter.name);
             const rated = voterVotes.length;
@@ -35,10 +35,10 @@ export const Home = async () => {
               <li key={voter.id}>
                 <a
                   href={`/vote/${encodeURIComponent(voter.name)}`}
-                  className="flex items-center justify-between rounded-xl border-2 border-mauve-200 px-5 py-4 no-underline transition-colors hover:border-indigo-400 hover:bg-indigo-50"
+                  className="flex items-center justify-between rounded-2xl border border-gray-800 bg-gray-900 px-5 py-4 no-underline transition-all hover:border-indigo-500 hover:bg-gray-800/80"
                 >
-                  <span className="text-lg font-semibold text-mauve-900">{voter.name}</span>
-                  <span className={`text-sm ${allDone ? "text-green-600" : "text-mauve-500"}`}>
+                  <span className="text-lg font-semibold text-gray-100">{voter.name}</span>
+                  <span className={`text-sm font-medium ${allDone ? "text-emerald-400" : "text-gray-500"}`}>
                     {rated}/{totalSongs} rated {allDone ? "✅" : ""}
                   </span>
                 </a>
@@ -49,8 +49,8 @@ export const Home = async () => {
       )}
 
       {songs.length === 0 && (
-        <p className="mt-8 text-mauve-400">
-          No songs found. Add country entries to the &quot;Songs&quot; table in Airtable.
+        <p className="mt-8 text-gray-500">
+          No songs found. Run the seed script to add songs.
         </p>
       )}
     </main>

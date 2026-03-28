@@ -41,10 +41,10 @@ export function RatingButtons({
           title={RATINGS[emoji]}
           aria-label={`${emoji} – ${RATINGS[emoji]}`}
           aria-pressed={selected === emoji}
-          className={`rounded-lg border-2 p-1 text-2xl leading-none transition-colors ${
+          className={`rounded-xl border-2 p-1.5 text-2xl leading-none transition-all ${
             selected === emoji
-              ? "border-indigo-500 bg-indigo-50"
-              : "border-transparent bg-transparent hover:bg-mauve-100"
+              ? "border-indigo-500 bg-indigo-950/60 shadow-[0_0_12px_rgba(99,102,241,0.3)]"
+              : "border-transparent bg-transparent hover:bg-gray-800"
           } ${isPending ? "cursor-not-allowed" : "cursor-pointer"}`}
         >
           {emoji}
