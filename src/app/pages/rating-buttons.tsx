@@ -5,15 +5,19 @@ import { submitVote } from "@/app/actions";
 import { RATINGS, type RatingEmoji } from "@/app/shared/constants";
 
 interface RatingButtonsProps {
+  gameId: string;
   voterName: string;
   country: string;
   currentRating: RatingEmoji | undefined;
+  readOnly?: boolean;
 }
 
 export function RatingButtons({
+  gameId,
   voterName,
   country,
   currentRating,
+  readOnly,
 }: RatingButtonsProps) {
   const [selected, setSelected] = useState<RatingEmoji | undefined>(
     currentRating,
@@ -21,9 +25,10 @@ export function RatingButtons({
   const [isPending, startTransition] = useTransition();
 
   const handleRate = (emoji: RatingEmoji) => {
+    if (readOnly) return;
     startTransition(async () => {
       setSelected(emoji);
-      await submitVote(voterName, country, emoji);
+      await submitVote(gameId, voterName, country, emoji);
     });
   };
 
@@ -37,7 +42,7 @@ export function RatingButtons({
         <button
           key={emoji}
           onClick={() => handleRate(emoji)}
-          disabled={isPending}
+          disabled={isPending || readOnly}
           title={RATINGS[emoji]}
           aria-label={`${emoji} – ${RATINGS[emoji]}`}
           aria-pressed={selected === emoji}
@@ -45,7 +50,7 @@ export function RatingButtons({
             selected === emoji
               ? "border-indigo-500 bg-indigo-950/60 shadow-[0_0_12px_rgba(99,102,241,0.3)]"
               : "border-transparent bg-transparent hover:bg-gray-800"
-          } ${isPending ? "cursor-not-allowed" : "cursor-pointer"}`}
+          } ${isPending || readOnly ? "cursor-not-allowed" : "cursor-pointer"} ${readOnly && !selected ? "opacity-40" : ""}`}
         >
           {emoji}
         </button>
