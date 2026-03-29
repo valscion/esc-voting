@@ -38,13 +38,27 @@ export function generateToken(): string {
   return `${adj}-${noun}-${num}`;
 }
 
+async function generateUniqueToken(): Promise<string> {
+  for (let i = 0; i < 10; i++) {
+    const token = generateToken();
+    const existing = await db
+      .selectFrom("games")
+      .select("id")
+      .where("token", "=", token)
+      .executeTakeFirst();
+    if (!existing) return token;
+  }
+  // Fallback: append random suffix
+  return `${generateToken()}-${Math.floor(Math.random() * 10000)}`;
+}
+
 // --- Game CRUD ---
 
 export async function createGame(
   voterNames: string[],
 ): Promise<Game> {
   const gameId = crypto.randomUUID();
-  const token = generateToken();
+  const token = await generateUniqueToken();
   const now = new Date().toISOString();
 
   await db

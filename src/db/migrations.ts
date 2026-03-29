@@ -30,6 +30,10 @@ export const migrations = {
           .addColumn("id", "text", (col) => col.primaryKey())
           .addColumn("game_id", "text", (col) => col.notNull())
           .addColumn("name", "text", (col) => col.notNull())
+          .addUniqueConstraint("voters_game_id_name_unique", [
+            "game_id",
+            "name",
+          ])
           .execute(),
 
         await db.schema
