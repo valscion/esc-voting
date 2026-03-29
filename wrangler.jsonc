@@ -12,6 +12,9 @@
   "compatibility_date": "2025-08-21",
   "compatibility_flags": ["nodejs_compat"],
 
+  // Deploy: always use `pnpm run release` (or `pnpm run deploy` which aliases it).
+  // Cloudflare Git integration auto-detects the `deploy` script from package.json.
+
   // Assets configuration
   "assets": {
     "binding": "ASSETS"

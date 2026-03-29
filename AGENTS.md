@@ -22,4 +22,37 @@ This project is a Cloudflare Workers application built with RedwoodSDK. When wor
 - **Entry point**: `src/worker.tsx` — defines routes using `rwsdk/router`
 - **Database**: Single Durable Object class `Database` in `src/db/durableObject.ts` with Kysely migrations in `src/db/migrations.ts`
 - **No seed endpoint**: Games and voters are created through the UI. The `pnpm run seed` command is a no-op.
-- **Deploy**: Use `pnpm run release` or Cloudflare's GitHub integration (auto-deploys on push to `main`)
+- **Deploy**: Use `pnpm run release` (builds + deploys via wrangler). Cloudflare's Git integration auto-detects the `deploy` script from `package.json`.
+
+## Viewing App Logs
+
+Observability is enabled in `wrangler.jsonc`. All CLI commands below require `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` environment variables to be set. These are configured as GitHub Copilot environment secrets (`CLOUDFLARE_API_TOKEN`) and variables (`CLOUDFLARE_ACCOUNT_ID`).
+
+### Live tail (real-time logs)
+
+```bash
+pnpm exec wrangler tail esc-voting
+```
+
+Streams live request logs, `console.log` output, and errors from the production Worker. Useful options:
+
+- `--format pretty` — human-readable output (default)
+- `--format json` — machine-readable JSON lines
+- `--status error` — only show failed invocations
+- `--search "keyword"` — filter logs by text match
+
+### Deployment history
+
+```bash
+pnpm exec wrangler deployments list
+```
+
+Lists the 10 most recent deployments with timestamps, version IDs, and authors. Add `--json` for machine-readable output.
+
+### Cloudflare Dashboard
+
+1. Go to [Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages) in the Cloudflare dashboard
+2. Select the **esc-voting** Worker
+3. Use the **Logs** tab for real-time log streaming
+4. Use the **Deployments** tab to see deployment history and rollback if needed
+5. Use **Analytics** → **Workers** for request counts, error rates, and latency metrics

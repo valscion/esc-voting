@@ -19,6 +19,7 @@
     "clean": "pnpm run clean:vite",
     "clean:vite": "rm -rf ./node_modules/.vite",
     "release": "rw-scripts ensure-deploy-env && pnpm run clean && pnpm run build && wrangler deploy",
+    "deploy": "pnpm run release",
     "generate": "rw-scripts ensure-env && wrangler types --include-runtime false",
     "check": "pnpm run generate && pnpm run types",
     "types": "tsc",
