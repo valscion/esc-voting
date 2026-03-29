@@ -22,7 +22,7 @@ This project is a Cloudflare Workers application built with RedwoodSDK. When wor
 - **Entry point**: `src/worker.tsx` — defines routes using `rwsdk/router`
 - **Database**: Single Durable Object class `Database` in `src/db/durableObject.ts` with Kysely migrations in `src/db/migrations.ts`
 - **No seed endpoint**: Games and voters are created through the UI. The `pnpm run seed` command is a no-op.
-- **Deploy**: Use `pnpm run release` (builds + deploys via wrangler). When using Cloudflare's Git integration (auto-deploys on push to `main`), set the dashboard deploy command to `pnpm run release`.
+- **Deploy**: Use `pnpm run release` (builds + deploys via wrangler). Cloudflare's Git integration auto-detects the `deploy` script from `package.json`.
 
 ## Viewing App Logs
 
