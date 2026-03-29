@@ -5,8 +5,17 @@ export const migrations = {
     async up(db) {
       return [
         await db.schema
+          .createTable("games")
+          .addColumn("id", "text", (col) => col.primaryKey())
+          .addColumn("token", "text", (col) => col.notNull().unique())
+          .addColumn("closed", "integer", (col) => col.notNull().defaultTo(0))
+          .addColumn("created_at", "text", (col) => col.notNull())
+          .execute(),
+
+        await db.schema
           .createTable("songs")
           .addColumn("id", "text", (col) => col.primaryKey())
+          .addColumn("game_id", "text", (col) => col.notNull())
           .addColumn("country", "text", (col) => col.notNull())
           .addColumn("artist", "text", (col) => col.notNull())
           .addColumn("song", "text", (col) => col.notNull())
@@ -19,12 +28,18 @@ export const migrations = {
         await db.schema
           .createTable("voters")
           .addColumn("id", "text", (col) => col.primaryKey())
-          .addColumn("name", "text", (col) => col.notNull().unique())
+          .addColumn("game_id", "text", (col) => col.notNull())
+          .addColumn("name", "text", (col) => col.notNull())
+          .addUniqueConstraint("voters_game_id_name_unique", [
+            "game_id",
+            "name",
+          ])
           .execute(),
 
         await db.schema
           .createTable("votes")
           .addColumn("id", "text", (col) => col.primaryKey())
+          .addColumn("game_id", "text", (col) => col.notNull())
           .addColumn("voterName", "text", (col) => col.notNull())
           .addColumn("country", "text", (col) => col.notNull())
           .addColumn("rating", "text", (col) => col.notNull())
@@ -36,6 +51,7 @@ export const migrations = {
       await db.schema.dropTable("votes").ifExists().execute();
       await db.schema.dropTable("voters").ifExists().execute();
       await db.schema.dropTable("songs").ifExists().execute();
+      await db.schema.dropTable("games").ifExists().execute();
     },
   },
 } satisfies Migrations;
