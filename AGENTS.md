@@ -26,7 +26,7 @@ This project is a Cloudflare Workers application built with RedwoodSDK. When wor
 
 ## Viewing App Logs
 
-Observability is enabled in `wrangler.jsonc`. Use these tools to inspect production logs and deployments:
+Observability is enabled in `wrangler.jsonc`. All CLI commands below require `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` environment variables to be set.
 
 ### Live tail (real-time logs)
 
