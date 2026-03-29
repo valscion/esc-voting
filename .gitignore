@@ -69,3 +69,8 @@ coverage
 # Playwright
 test-results/
 playwright-report/
+
+# AI agent skills (installed via `npx skills add`)
+.agents/
+.claude/
+.adal/
