@@ -12,6 +12,10 @@
   "compatibility_date": "2025-08-21",
   "compatibility_flags": ["nodejs_compat"],
 
+  // Deploy: always use `pnpm run release` which cleans, builds, and deploys.
+  // When using Cloudflare Git integration, set the dashboard deploy command to:
+  //   pnpm run release
+
   // Assets configuration
   "assets": {
     "binding": "ASSETS"
