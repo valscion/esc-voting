@@ -26,7 +26,7 @@ This project is a Cloudflare Workers application built with RedwoodSDK. When wor
 
 ## Viewing App Logs
 
-Observability is enabled in `wrangler.jsonc`. All CLI commands below require `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` environment variables to be set.
+Observability is enabled in `wrangler.jsonc`. All CLI commands below require `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` environment variables to be set. These are configured as GitHub Copilot environment secrets (`CLOUDFLARE_API_TOKEN`) and variables (`CLOUDFLARE_ACCOUNT_ID`).
 
 ### Live tail (real-time logs)
 
