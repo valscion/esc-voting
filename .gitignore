@@ -70,8 +70,10 @@ coverage
 test-results/
 playwright-report/
 
-# AI agent skills (installed via `npx skills add`)
-.agents/
+# AI agent skills — symlink directories created by `npx skills add`
+# The actual skill files live in .agents/skills/ and are committed.
+# These are per-agent symlink directories that should not be committed.
+skills/
 .adal/
 .augment/
 .claude/
