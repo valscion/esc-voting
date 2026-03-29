@@ -38,8 +38,17 @@ export function GameForm() {
     }
 
     startTransition(async () => {
-      const token = await createGame(unique);
-      window.location.href = `/${token}`;
+      try {
+        await createGame(unique);
+        // The server action returns a redirect Response, so the framework
+        // handles navigation automatically. No manual redirect needed.
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to create game. Please try again.",
+        );
+      }
     });
   };
 
