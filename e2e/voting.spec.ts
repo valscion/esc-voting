@@ -2,13 +2,25 @@ import { test, expect } from "@playwright/test";
 
 test.describe("ESC Voting App", () => {
   /**
+   * Navigate to a page and wait for client-side hydration to complete.
+   * RSC apps need hydration before client components (forms, buttons) work.
+   */
+  async function gotoAndHydrate(
+    page: import("@playwright/test").Page,
+    url: string,
+  ) {
+    await page.goto(url);
+    await page.waitForLoadState("networkidle");
+  }
+
+  /**
    * Helper: create a new game and return the game token.
    */
   async function createGame(
     page: import("@playwright/test").Page,
     names: string[] = ["Alice", "Bob"],
   ): Promise<string> {
-    await page.goto("/");
+    await gotoAndHydrate(page, "/");
 
     // Clear default fields and fill in names
     const inputs = page.locator('input[type="text"]');
@@ -16,6 +28,8 @@ test.describe("ESC Voting App", () => {
       if (i >= 2) {
         // Click "Add another friend" to get more inputs
         await page.getByText("+ Add another friend").click();
+        // Wait for the new input to appear
+        await expect(inputs).toHaveCount(i + 1);
       }
       const input = inputs.nth(i);
       await input.fill(names[i]);
@@ -25,7 +39,7 @@ test.describe("ESC Voting App", () => {
     await page.getByText("Start voting!").click();
 
     // Wait for navigation to the game page
-    await page.waitForURL(/\/[a-z]+-[a-z]+-\d+/);
+    await page.waitForURL(/\/[a-z]+-[a-z]+-\d+/, { timeout: 15000 });
 
     // Extract token from URL
     const url = new URL(page.url());
@@ -52,7 +66,7 @@ test.describe("ESC Voting App", () => {
     });
 
     test("can add and remove friend fields", async ({ page }) => {
-      await page.goto("/");
+      await gotoAndHydrate(page, "/");
 
       // Start with 2 inputs
       await expect(page.locator('input[type="text"]')).toHaveCount(2);
@@ -152,6 +166,7 @@ test.describe("ESC Voting App", () => {
     test("can cast a vote by clicking a rating emoji", async ({ page }) => {
       await createGame(page);
       await page.locator("ul a").first().click();
+      await page.waitForLoadState("networkidle");
 
       // Find the first song's rating buttons group
       const firstRatingGroup = page.locator('[role="group"]').first();
@@ -168,6 +183,7 @@ test.describe("ESC Voting App", () => {
     test("can change a vote", async ({ page }) => {
       await createGame(page);
       await page.locator("ul a").first().click();
+      await page.waitForLoadState("networkidle");
 
       const firstRatingGroup = page.locator('[role="group"]').first();
 
@@ -200,6 +216,7 @@ test.describe("ESC Voting App", () => {
     test("vote persists after page reload", async ({ page }) => {
       await createGame(page);
       await page.locator("ul a").first().click();
+      await page.waitForLoadState("networkidle");
 
       // Cast a vote on the first song
       const firstRatingGroup = page.locator('[role="group"]').first();
@@ -228,14 +245,15 @@ test.describe("ESC Voting App", () => {
 
       // Cast a vote first
       await page.locator("ul a").first().click();
+      await page.waitForLoadState("networkidle");
       const firstRatingGroup = page.locator('[role="group"]').first();
       await firstRatingGroup.locator("button").first().click();
       await expect(
         firstRatingGroup.locator("button").first(),
       ).toHaveAttribute("aria-pressed", "true");
 
-      // Go back to game page
-      await page.goto(`/${token}`);
+      // Go back to game page and wait for hydration
+      await gotoAndHydrate(page, `/${token}`);
 
       // Close the game
       page.on("dialog", (dialog) => dialog.accept());
@@ -254,6 +272,9 @@ test.describe("ESC Voting App", () => {
 
     test("can delete a game", async ({ page }) => {
       const token = await createGame(page);
+
+      // Wait for game controls to be hydrated
+      await page.waitForLoadState("networkidle");
 
       // Delete the game
       page.on("dialog", (dialog) => dialog.accept());
