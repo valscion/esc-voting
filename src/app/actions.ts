@@ -11,9 +11,12 @@ import {
 } from "@/app/data";
 
 export const createGame = serverAction(
-  async (voterNames: string[]): Promise<string> => {
+  async (voterNames: string[]): Promise<Response> => {
     const game = await createGameData(voterNames);
-    return game.token;
+    return new Response(null, {
+      status: 302,
+      headers: { Location: `/${game.token}` },
+    });
   },
 );
 
