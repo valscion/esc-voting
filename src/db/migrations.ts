@@ -79,4 +79,26 @@ export const migrations = {
       // Don't drop games in down — 001 already handles that
     },
   },
+  "003_add_youtube_and_duration": {
+    async up(db) {
+      return [
+        await db.schema
+          .alterTable("songs")
+          .addColumn("youtubeId", "text", (col) => col.notNull().defaultTo(""))
+          .execute(),
+
+        await db.schema
+          .alterTable("songs")
+          .addColumn("durationSec", "integer", (col) =>
+            col.notNull().defaultTo(0),
+          )
+          .execute(),
+      ];
+    },
+
+    async down(db) {
+      await db.schema.alterTable("songs").dropColumn("youtubeId").execute();
+      await db.schema.alterTable("songs").dropColumn("durationSec").execute();
+    },
+  },
 } satisfies Migrations;
