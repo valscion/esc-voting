@@ -5,7 +5,7 @@
  *
  * Tables:
  *   games   – id, token, closed, created_at
- *   songs   – id, game_id, country, artist, song, flag, runningOrder
+ *   songs   – id, game_id, country, artist, song, flag, runningOrder, youtubeId, durationSec
  *   voters  – id, game_id, name
  *   votes   – id, game_id, voterName, country, rating
  */
@@ -75,6 +75,8 @@ export async function createGame(
     song: s.song,
     flag: s.flag,
     runningOrder: i + 1,
+    youtubeId: s.youtubeId,
+    durationSec: s.durationSec,
   }));
   for (let i = 0; i < songValues.length; i += 10) {
     await db
@@ -140,6 +142,8 @@ export async function getSongs(gameId: string): Promise<Song[]> {
     song: r.song,
     flag: r.flag,
     runningOrder: r.runningOrder,
+    youtubeId: r.youtubeId,
+    durationSec: r.durationSec,
   }));
 }
 

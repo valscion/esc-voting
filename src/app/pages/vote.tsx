@@ -99,6 +99,9 @@ export const VotePage = async ({
       <ul className="mt-6">
         {songs.map((song) => {
           const currentRating = voteMap.get(song.country);
+          const mins = Math.floor(song.durationSec / 60);
+          const secs = song.durationSec % 60;
+          const duration = `${mins}:${String(secs).padStart(2, "0")}`;
           return (
             <li
               key={song.id}
@@ -109,7 +112,22 @@ export const VotePage = async ({
                   {song.flag} {song.country}
                 </div>
                 <div className="truncate text-sm text-gray-500">
-                  {song.artist} – {song.song}
+                  {song.artist} –{" "}
+                  {song.youtubeId ? (
+                    <a
+                      href={`https://www.youtube.com/watch?v=${song.youtubeId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-400 no-underline hover:text-indigo-300"
+                    >
+                      {song.song}
+                    </a>
+                  ) : (
+                    song.song
+                  )}
+                  {song.durationSec > 0 && (
+                    <span className="ml-1.5 text-gray-600">({duration})</span>
+                  )}
                 </div>
               </div>
               <RatingButtons
