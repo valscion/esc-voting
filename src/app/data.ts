@@ -13,6 +13,7 @@
 import { db } from "@/db";
 import type { Game, Song, Voter, Vote, RatingEmoji } from "@/app/shared/constants";
 import { ESC_SONGS, ESC_MONTAGE_YOUTUBE_ID, RATING_SCORES } from "@/app/shared/constants";
+import { computeMedianScore, scoreToEmoji } from "@/app/shared/scoring";
 
 export type { Game, Song, Voter, Vote, RatingEmoji };
 export { RATINGS, RATING_SCORES } from "@/app/shared/constants";
@@ -236,20 +237,71 @@ export interface SongResult {
   song: string;
   flag: string;
   totalScore: number;
-  voteBreakdown: { voter: string; emoji: RatingEmoji; score: number }[];
+  voteBreakdown: { voter: string; emoji: RatingEmoji; score: number; assumed: boolean }[];
+}
+
+/**
+ * Compute assumed votes for songs where a given voter didn't cast a vote.
+ *
+ * For each unrated song, the assumed score is the median of all scores given
+ * by other voters, rounded down to the nearest emoji score.
+ *
+ * Returns a record mapping country → assumed RatingEmoji. Only includes
+ * entries for songs that have at least one real vote from another voter.
+ */
+export async function getAssumedVotesForVoter(
+  gameId: string,
+  voterName: string,
+): Promise<Record<string, RatingEmoji>> {
+  const [songs, allVotes, voterVotes] = await Promise.all([
+    getSongs(gameId),
+    getAllVotes(gameId),
+    getVotesForVoter(gameId, voterName),
+  ]);
+
+  // Countries this voter already rated
+  const ratedCountries = new Set(voterVotes.map((v) => v.country));
+
+  // Build a map of country → all votes
+  const votesByCountry = new Map<string, Vote[]>();
+  for (const v of allVotes) {
+    const list = votesByCountry.get(v.country) ?? [];
+    list.push(v);
+    votesByCountry.set(v.country, list);
+  }
+
+  const assumed: Record<string, RatingEmoji> = {};
+  for (const song of songs) {
+    if (ratedCountries.has(song.country)) continue;
+
+    const songVotes = votesByCountry.get(song.country) ?? [];
+    if (songVotes.length === 0) continue;
+
+    const scores = songVotes.map((v) => RATING_SCORES[v.rating] ?? 0);
+    const medianScore = computeMedianScore(scores);
+    assumed[song.country] = scoreToEmoji(medianScore);
+  }
+
+  return assumed;
 }
 
 /**
  * Compute results grouped into sections by total score, sorted ascending
  * (worst first). Each section is a group of songs sharing the same total score.
+ *
+ * When not all voters have voted for a song, assumed votes are computed using
+ * the median of the actual scores (rounded down to the nearest emoji score).
  */
 export async function getResultsByScore(
   gameId: string,
 ): Promise<{ score: number; songs: SongResult[] }[]> {
-  const [songs, votes] = await Promise.all([
+  const [songs, votes, voters] = await Promise.all([
     getSongs(gameId),
     getAllVotes(gameId),
+    getVoters(gameId),
   ]);
+
+  const voterNames = voters.map((v) => v.name);
 
   // Build a map of country → votes
   const votesByCountry = new Map<string, Vote[]>();
@@ -262,19 +314,45 @@ export async function getResultsByScore(
   // Calculate score for each song
   const songResults: SongResult[] = songs.map((song) => {
     const songVotes = votesByCountry.get(song.country) ?? [];
-    const breakdown = songVotes.map((v) => ({
+    const actualBreakdown = songVotes.map((v) => ({
       voter: v.voter,
       emoji: v.rating,
       score: RATING_SCORES[v.rating] ?? 0,
+      assumed: false,
     }));
-    const totalScore = breakdown.reduce((sum, b) => sum + b.score, 0);
+
+    // Find voters who didn't vote for this song
+    const votedVoters = new Set(songVotes.map((v) => v.voter));
+    const missingVoters = voterNames.filter((name) => !votedVoters.has(name));
+
+    // Compute assumed votes for missing voters
+    const assumedBreakdown: typeof actualBreakdown = [];
+    if (missingVoters.length > 0 && actualBreakdown.length > 0) {
+      const actualScores = actualBreakdown.map((b) => b.score);
+      const medianScore = computeMedianScore(actualScores);
+      const assumedEmoji = scoreToEmoji(medianScore);
+      const assumedScore = RATING_SCORES[assumedEmoji];
+
+      for (const voter of missingVoters) {
+        assumedBreakdown.push({
+          voter,
+          emoji: assumedEmoji,
+          score: assumedScore,
+          assumed: true,
+        });
+      }
+    }
+
+    const allBreakdown = [...actualBreakdown, ...assumedBreakdown];
+    const totalScore = allBreakdown.reduce((sum, b) => sum + b.score, 0);
+
     return {
       country: song.country,
       artist: song.artist,
       song: song.song,
       flag: song.flag,
       totalScore,
-      voteBreakdown: breakdown,
+      voteBreakdown: allBreakdown,
     };
   });
 
