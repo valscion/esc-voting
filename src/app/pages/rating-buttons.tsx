@@ -71,7 +71,7 @@ export function RatingButtons({
         );
       })}
       {isAssumed && (
-        <span className="self-center text-xs text-gray-600 ml-1" title="Score assumed from median of other votes">
+        <span className="ml-1 self-center text-xs text-gray-600" title="Score assumed from median of other votes">
           (assumed)
         </span>
       )}
