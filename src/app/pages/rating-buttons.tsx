@@ -11,6 +11,7 @@ interface RatingButtonsProps {
   currentRating: RatingEmoji | undefined;
   assumedRating?: RatingEmoji;
   readOnly?: boolean;
+  songIndex?: number;
 }
 
 export function RatingButtons({
@@ -20,6 +21,7 @@ export function RatingButtons({
   currentRating,
   assumedRating,
   readOnly,
+  songIndex,
 }: RatingButtonsProps) {
   const [selected, setSelected] = useState<RatingEmoji | undefined>(
     currentRating,
@@ -27,7 +29,7 @@ export function RatingButtons({
   const [isPending, startTransition] = useTransition();
 
   const handleRate = (emoji: RatingEmoji) => {
-    if (readOnly) return;
+    if (readOnly || isPending) return;
     startTransition(async () => {
       setSelected(emoji);
       await submitVote(gameId, voterName, country, emoji);
@@ -44,13 +46,16 @@ export function RatingButtons({
       role="group"
       aria-label={`Rate ${country}`}
     >
-      {(Object.keys(RATINGS) as RatingEmoji[]).map((emoji) => {
+      {(Object.keys(RATINGS) as RatingEmoji[]).map((emoji, ratingIdx) => {
         const isDisplayed = displayEmoji === emoji;
         return (
           <button
             key={emoji}
             onClick={() => handleRate(emoji)}
-            disabled={isPending || readOnly}
+            disabled={readOnly}
+            aria-disabled={isPending || readOnly}
+            data-song-index={songIndex}
+            data-rating-index={ratingIdx}
             title={
               isAssumed && isDisplayed
                 ? `${RATINGS[emoji]} (assumed – you didn't vote)`
@@ -61,7 +66,7 @@ export function RatingButtons({
             className={`rounded-xl border-2 p-1.5 text-2xl leading-none transition-all ${
               isDisplayed
                 ? isAssumed
-                  ? "border-dashed border-gray-500 bg-gray-900/40 opacity-50"
+                  ? "border-indigo-800 bg-indigo-950/60 shadow-[0_0_12px_rgba(99,102,241,0.15)] border-dashed"
                   : "border-indigo-500 bg-indigo-950/60 shadow-[0_0_12px_rgba(99,102,241,0.3)]"
                 : "border-transparent bg-transparent hover:bg-gray-800"
             } ${isPending || readOnly ? "cursor-not-allowed" : "cursor-pointer"} ${readOnly && !isDisplayed ? "opacity-40" : ""}`}
@@ -70,11 +75,6 @@ export function RatingButtons({
           </button>
         );
       })}
-      {isAssumed && (
-        <span className="ml-1 self-center text-xs text-gray-600" title="Score assumed from median of other votes">
-          (assumed)
-        </span>
-      )}
     </div>
   );
 }

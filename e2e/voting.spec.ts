@@ -237,6 +237,93 @@ test.describe("ESC Voting App", () => {
       const reloadedHeart = reloadedGroup.locator("button").nth(1);
       await expect(reloadedHeart).toHaveAttribute("aria-pressed", "true");
     });
+
+    test("arrow keys navigate between rating buttons like a grid", async ({
+      page,
+    }) => {
+      await createGame(page);
+      await page.locator("ul a").first().click();
+      await page.waitForLoadState("networkidle");
+
+      // Focus the first rating button of the first song
+      const firstButton = page.locator(
+        'button[data-song-index="0"][data-rating-index="0"]',
+      );
+      await firstButton.focus();
+      await expect(firstButton).toBeFocused();
+
+      // ArrowRight moves to the next rating in the same row
+      await page.keyboard.press("ArrowRight");
+      const secondRating = page.locator(
+        'button[data-song-index="0"][data-rating-index="1"]',
+      );
+      await expect(secondRating).toBeFocused();
+
+      // ArrowDown moves to the same rating column in the next song
+      await page.keyboard.press("ArrowDown");
+      const nextSongSameRating = page.locator(
+        'button[data-song-index="1"][data-rating-index="1"]',
+      );
+      await expect(nextSongSameRating).toBeFocused();
+
+      // ArrowLeft moves back one rating column
+      await page.keyboard.press("ArrowLeft");
+      const nextSongFirstRating = page.locator(
+        'button[data-song-index="1"][data-rating-index="0"]',
+      );
+      await expect(nextSongFirstRating).toBeFocused();
+
+      // ArrowUp moves back to the previous song
+      await page.keyboard.press("ArrowUp");
+      await expect(firstButton).toBeFocused();
+    });
+
+    test("arrow keys do nothing at grid boundaries", async ({ page }) => {
+      await createGame(page);
+      await page.locator("ul a").first().click();
+      await page.waitForLoadState("networkidle");
+
+      // Focus the first button (top-left corner)
+      const topLeft = page.locator(
+        'button[data-song-index="0"][data-rating-index="0"]',
+      );
+      await topLeft.focus();
+
+      // ArrowUp at top row keeps focus in place
+      await page.keyboard.press("ArrowUp");
+      await expect(topLeft).toBeFocused();
+
+      // ArrowLeft at leftmost column keeps focus in place
+      await page.keyboard.press("ArrowLeft");
+      await expect(topLeft).toBeFocused();
+    });
+
+    test("Space selects a rating and focus remains on the button", async ({
+      page,
+    }) => {
+      await createGame(page);
+      await page.locator("ul a").first().click();
+      await page.waitForLoadState("networkidle");
+
+      const btn = page.locator(
+        'button[data-song-index="0"][data-rating-index="2"]',
+      );
+      await btn.focus();
+
+      // Press Space to activate the button
+      await page.keyboard.press("Space");
+
+      // The button should be selected and still focused
+      await expect(btn).toHaveAttribute("aria-pressed", "true");
+      await expect(btn).toBeFocused();
+
+      // Arrow navigation should still work from here
+      await page.keyboard.press("ArrowDown");
+      const belowBtn = page.locator(
+        'button[data-song-index="1"][data-rating-index="2"]',
+      );
+      await expect(belowBtn).toBeFocused();
+    });
   });
 
   test.describe("Game Controls", () => {
