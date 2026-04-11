@@ -23,6 +23,7 @@
     "generate": "rw-scripts ensure-env && wrangler types --include-runtime false",
     "check": "pnpm run generate && pnpm run types",
     "types": "tsc",
+    "test:unit": "vitest run --config vitest.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },
@@ -43,6 +44,7 @@
     "@types/react-dom": "19.2.3",
     "typescript": "5.9.3",
     "vite": "7.3.1",
+    "vitest": "^4.1.4",
     "wrangler": "4.71.0"
   },
   "pnpm": {

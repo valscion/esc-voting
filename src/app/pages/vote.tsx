@@ -2,6 +2,7 @@ import {
   getGameByToken,
   getSongs,
   getVotesForVoter,
+  getAssumedVotesForVoter,
   RATINGS,
   type RatingEmoji,
 } from "@/app/data";
@@ -44,6 +45,11 @@ export const VotePage = async ({
   for (const v of votes) {
     voteRecord[v.country] = v.rating;
   }
+
+  // When the game is closed, compute assumed votes for unrated songs
+  const assumedVotes: Record<string, RatingEmoji> = isClosed
+    ? await getAssumedVotesForVoter(game.id, voterName)
+    : {};
 
   const rated = votes.length;
   const total = songs.length;
@@ -102,6 +108,7 @@ export const VotePage = async ({
         songs={songs}
         voterName={voterName}
         votes={voteRecord}
+        assumedVotes={assumedVotes}
         isClosed={isClosed}
       />
 

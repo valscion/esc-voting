@@ -9,6 +9,7 @@ interface VoteSongListProps {
   songs: Song[];
   voterName: string;
   votes: Record<string, RatingEmoji>;
+  assumedVotes?: Record<string, RatingEmoji>;
   isClosed: boolean;
 }
 
@@ -17,6 +18,7 @@ export function VoteSongList({
   songs,
   voterName,
   votes,
+  assumedVotes = {},
   isClosed,
 }: VoteSongListProps) {
   const activeSong = useActiveSong(gameId);
@@ -36,6 +38,7 @@ export function VoteSongList({
       <ul className="mt-6">
         {songs.map((song, idx) => {
           const currentRating = votes[song.country];
+          const assumedRating = assumedVotes[song.country];
           const isActive = activeSong === song.country;
           const mins = Math.floor(song.durationSec / 60);
           const secs = song.durationSec % 60;
@@ -79,6 +82,7 @@ export function VoteSongList({
                 voterName={voterName}
                 country={song.country}
                 currentRating={currentRating}
+                assumedRating={assumedRating}
                 readOnly={isClosed}
               />
             </li>

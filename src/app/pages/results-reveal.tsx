@@ -112,16 +112,40 @@ export function ResultsReveal({ token, results }: ResultsRevealProps) {
 
                 {/* Vote breakdown */}
                 {song.voteBreakdown.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {song.voteBreakdown.map((vote) => (
-                      <span
-                        key={vote.voter}
-                        className="rounded-lg bg-gray-800/80 px-2.5 py-1 text-sm text-gray-300"
-                        title={`${vote.voter}: ${vote.emoji} (${vote.score > 0 ? "+" : ""}${vote.score})`}
-                      >
-                        {vote.voter}: {vote.emoji}
-                      </span>
-                    ))}
+                  <div className="mt-3">
+                    <div className="flex flex-wrap gap-2">
+                      {song.voteBreakdown
+                        .filter((vote) => !vote.assumed)
+                        .map((vote) => (
+                          <span
+                            key={vote.voter}
+                            className="rounded-lg bg-gray-800/80 px-2.5 py-1 text-sm text-gray-300"
+                            title={`${vote.voter}: ${vote.emoji} (${vote.score > 0 ? "+" : ""}${vote.score})`}
+                          >
+                            {vote.voter}: {vote.emoji}
+                          </span>
+                        ))}
+                    </div>
+                    {song.voteBreakdown.some((vote) => vote.assumed) && (
+                      <div className="mt-2">
+                        <div className="mb-1 text-xs text-gray-500">
+                          Assumed (didn&apos;t vote):
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {song.voteBreakdown
+                            .filter((vote) => vote.assumed)
+                            .map((vote) => (
+                              <span
+                                key={vote.voter}
+                                className="rounded-lg border border-dashed border-gray-700 bg-gray-900/50 px-2.5 py-1 text-sm text-gray-500"
+                                title={`${vote.voter}: ${vote.emoji} (${vote.score > 0 ? "+" : ""}${vote.score}) – assumed from median`}
+                              >
+                                {vote.voter}: {vote.emoji}
+                              </span>
+                            ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </li>
