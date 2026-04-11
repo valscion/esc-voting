@@ -61,8 +61,13 @@ export function DashboardControls({ gameId, songs }: DashboardControlsProps) {
                     : "border-gray-800 bg-gray-900 hover:border-gray-700 hover:bg-gray-800/80"
                 }`}
                 aria-pressed={isActive}
+                aria-label={
+                  isActive
+                    ? `Stop playing ${song.country}`
+                    : `Play ${song.country}`
+                }
               >
-                <span className="text-2xl">{isActive ? "⏸" : "▶️"}</span>
+                <span className="text-2xl" aria-hidden="true">{isActive ? "⏸" : "▶️"}</span>
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-gray-100">
                     {song.flag} {song.country}
