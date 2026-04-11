@@ -1,5 +1,4 @@
 import { getGameByToken, getSongs, getResultsByScore } from "@/app/data";
-import { ESC_MONTAGE_DATA } from "@/app/shared/constants";
 import { DashboardControls } from "./dashboard-controls";
 import { GameControls } from "./game-controls";
 import { ResultsReveal } from "./results-reveal";
@@ -84,7 +83,6 @@ export const DashboardPage = async ({
           durationSec: s.durationSec,
         }))}
         escYear={game.escYear}
-        montageYoutubeId={ESC_MONTAGE_DATA[game.escYear]?.youtubeId ?? ""}
       />
 
       <GameControls token={token} closed={false} />

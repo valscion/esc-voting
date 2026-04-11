@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useSyncedState } from "rwsdk/use-synced-state/client";
 import { ESC_MONTAGE_DATA } from "@/app/shared/constants";
-import { MontagePlayer } from "./montage-player";
 
 interface SongInfo {
   country: string;
@@ -29,7 +28,6 @@ interface DashboardControlsProps {
   gameId: string;
   songs: SongInfo[];
   escYear: number;
-  montageYoutubeId: string;
 }
 
 function formatDuration(seconds: number): string {
@@ -38,7 +36,7 @@ function formatDuration(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function DashboardControls({ gameId, songs, escYear, montageYoutubeId }: DashboardControlsProps) {
+export function DashboardControls({ gameId, songs, escYear }: DashboardControlsProps) {
   const [activeSong, setActiveSong] = useSyncedState<string | null>(
     null,
     "activeSong",
@@ -60,7 +58,6 @@ export function DashboardControls({ gameId, songs, escYear, montageYoutubeId }: 
     gameId,
   );
 
-  const [isMontageActive, setIsMontageActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const montageData = ESC_MONTAGE_DATA[escYear];
 
@@ -73,7 +70,6 @@ export function DashboardControls({ gameId, songs, escYear, montageYoutubeId }: 
     } else {
       setActiveSong(country);
       setTvMode("song");
-      setIsMontageActive(false);
       setIsPaused(false);
     }
   };
@@ -81,7 +77,6 @@ export function DashboardControls({ gameId, songs, escYear, montageYoutubeId }: 
   const handleStop = () => {
     setActiveSong(null);
     setTvMode(null);
-    setIsMontageActive(false);
     setIsPaused(false);
   };
 
@@ -110,13 +105,11 @@ export function DashboardControls({ gameId, songs, escYear, montageYoutubeId }: 
   };
 
   const handleMontageToggle = () => {
-    if (isMontageActive) {
-      setIsMontageActive(false);
+    if (tvMode === "montage") {
       setActiveSong(null);
       setTvMode(null);
       setIsPaused(false);
     } else {
-      setIsMontageActive(true);
       setTvMode("montage");
       setTvPlayback({ command: "play" });
       setIsPaused(false);
@@ -136,28 +129,14 @@ export function DashboardControls({ gameId, songs, escYear, montageYoutubeId }: 
             type="button"
             onClick={handleMontageToggle}
             className={`rounded-2xl border px-5 py-3 text-sm font-medium transition-all ${
-              isMontageActive
+              tvMode === "montage"
                 ? "border-amber-600 bg-amber-950/40 text-amber-300 hover:border-red-500 hover:text-red-400"
                 : "border-gray-700 bg-gray-900 text-gray-400 hover:border-amber-600 hover:text-amber-300"
             }`}
           >
-            {isMontageActive ? "⏹ Stop Montage" : "▶️ Play Montage"}
+            {tvMode === "montage" ? "⏹ Stop Montage" : "▶️ Play Montage"}
           </button>
         </div>
-      )}
-
-      {/* Montage video player (inline on dashboard) */}
-      {isMontageActive && montageData && (
-        <MontagePlayer
-          youtubeId={montageData.youtubeId}
-          timestamps={montageData.timestamps}
-          onSongChange={(country) => setActiveSong(country)}
-          onEnded={() => {
-            setIsMontageActive(false);
-            setActiveSong(null);
-            setTvMode(null);
-          }}
-        />
       )}
 
       {/* Now playing bar */}

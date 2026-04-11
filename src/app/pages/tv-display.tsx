@@ -32,6 +32,7 @@ export const TVDisplayPage = async ({
         song: s.song,
       }))}
       montageYoutubeId={montageData?.youtubeId ?? ""}
+      montageTimestamps={montageData?.timestamps ?? []}
     />
   );
 };

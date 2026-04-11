@@ -27,9 +27,29 @@ interface TVPlayerProps {
   gameId: string;
   songs: TVSongInfo[];
   montageYoutubeId: string;
+  montageTimestamps: { startSec: number; country: string }[];
 }
 
-export function TVPlayer({ gameId, songs, montageYoutubeId }: TVPlayerProps) {
+/**
+ * Given the current playback time in seconds, returns the country name
+ * of the song currently playing in the montage video.
+ */
+function getCountryAtTime(
+  seconds: number,
+  timestamps: { startSec: number; country: string }[],
+): string | null {
+  let result: string | null = null;
+  for (const entry of timestamps) {
+    if (seconds >= entry.startSec) {
+      result = entry.country;
+    } else {
+      break;
+    }
+  }
+  return result;
+}
+
+export function TVPlayer({ gameId, songs, montageYoutubeId, montageTimestamps }: TVPlayerProps) {
   const playerRef = useRef<HTMLVideoElement>(null);
 
   // Synced state — read
@@ -61,6 +81,7 @@ export function TVPlayer({ gameId, songs, montageYoutubeId }: TVPlayerProps) {
   const [showOverlay, setShowOverlay] = useState(false);
   const [overlayFading, setOverlayFading] = useState(false);
   const overlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastMontageCountryRef = useRef<string | null>(null);
 
   // Find the current song
   const currentSong = activeSong
@@ -133,7 +154,7 @@ export function TVPlayer({ gameId, songs, montageYoutubeId }: TVPlayerProps) {
     }
   }, [tvPlayback]);
 
-  // Handle timeupdate for progress reporting
+  // Handle timeupdate for progress reporting and montage song tracking
   const handleTimeUpdate = useCallback(() => {
     const el = playerRef.current;
     if (!el || !el.duration) return;
@@ -145,11 +166,22 @@ export function TVPlayer({ gameId, songs, montageYoutubeId }: TVPlayerProps) {
           ? el.buffered.end(el.buffered.length - 1) / el.duration
           : 0,
     });
-  }, [setTvProgress]);
+
+    // In montage mode, sync activeSong based on timestamps
+    if (isMontageMode && montageTimestamps.length > 0) {
+      const country = getCountryAtTime(el.currentTime, montageTimestamps);
+      if (country !== lastMontageCountryRef.current) {
+        lastMontageCountryRef.current = country;
+        setActiveSong(country);
+      }
+    }
+  }, [setTvProgress, isMontageMode, montageTimestamps, setActiveSong]);
 
   // Handle video end
   const handleEnded = useCallback(() => {
     if (isMontageMode) {
+      lastMontageCountryRef.current = null;
+      setActiveSong(null);
       setTvMode(null);
       setPlaying(false);
       return;
