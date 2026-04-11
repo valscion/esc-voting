@@ -6,6 +6,7 @@ import {
   type RatingEmoji,
 } from "@/app/data";
 import { RatingButtons } from "./rating-buttons";
+import { ActiveSongTracker } from "./active-song-tracker";
 
 export const VotePage = async ({
   params,
@@ -96,7 +97,17 @@ export const VotePage = async ({
         </div>
       )}
 
-      <ul className="mt-6">
+      <ActiveSongTracker
+        gameId={game.id}
+        songs={songs.map((s) => ({
+          country: s.country,
+          artist: s.artist,
+          song: s.song,
+          flag: s.flag,
+        }))}
+      />
+
+      <ul className="mt-6" data-song-list>
         {songs.map((song, idx) => {
           const currentRating = voteMap.get(song.country);
           const mins = Math.floor(song.durationSec / 60);
@@ -105,7 +116,8 @@ export const VotePage = async ({
           return (
             <li
               key={song.id}
-              className={`flex items-center justify-between gap-4 pt-4 ${
+              data-country={song.country}
+              className={`relative flex items-center justify-between gap-4 pt-4 ${
                 idx !== songs.length - 1 && "border-b border-gray-800/60 pb-4"
               }`}
             >
