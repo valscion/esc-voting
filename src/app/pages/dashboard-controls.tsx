@@ -23,26 +23,36 @@ export function DashboardControls({ gameId, songs }: DashboardControlsProps) {
 
   return (
     <div className="mt-8">
-      {activeSong && (
-        <div className="mb-6 flex items-center justify-between rounded-2xl bg-indigo-950/40 px-5 py-3 text-sm font-medium text-indigo-300 ring-1 ring-indigo-800">
-          <span>
-            🎵 Now playing:{" "}
-            {(() => {
-              const song = songs.find((s) => s.country === activeSong);
-              return song
-                ? `${song.flag} ${song.country} – ${song.artist}`
-                : activeSong;
-            })()}
-          </span>
-          <button
-            type="button"
-            onClick={() => setActiveSong(null)}
-            className="ml-4 rounded-xl border border-gray-700 px-3 py-1.5 text-xs text-gray-400 transition-colors hover:border-red-500 hover:text-red-400"
-          >
-            ⏹ Stop
-          </button>
-        </div>
-      )}
+      <div
+        className={`mb-6 flex items-center justify-between rounded-2xl px-5 py-3 text-sm font-medium ring-1 ${
+          activeSong
+            ? "bg-indigo-950/40 text-indigo-300 ring-indigo-800"
+            : "bg-gray-900/40 text-gray-600 ring-gray-800"
+        }`}
+      >
+        {activeSong ? (
+          <>
+            <span>
+              🎵 Now playing:{" "}
+              {(() => {
+                const song = songs.find((s) => s.country === activeSong);
+                return song
+                  ? `${song.flag} ${song.country} – ${song.artist}`
+                  : activeSong;
+              })()}
+            </span>
+            <button
+              type="button"
+              onClick={() => setActiveSong(null)}
+              className="ml-4 rounded-xl border border-gray-700 px-3 py-1.5 text-xs text-gray-400 transition-colors hover:border-red-500 hover:text-red-400"
+            >
+              ⏹ Stop
+            </button>
+          </>
+        ) : (
+          <span>🎵 No song currently playing</span>
+        )}
+      </div>
 
       <ul className="flex flex-col gap-2">
         {songs.map((song) => {

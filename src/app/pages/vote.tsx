@@ -5,8 +5,7 @@ import {
   RATINGS,
   type RatingEmoji,
 } from "@/app/data";
-import { RatingButtons } from "./rating-buttons";
-import { ActiveSongTracker } from "./active-song-tracker";
+import { VoteSongList } from "./vote-song-list";
 
 export const VotePage = async ({
   params,
@@ -41,9 +40,10 @@ export const VotePage = async ({
     getVotesForVoter(game.id, voterName),
   ]);
 
-  const voteMap = new Map<string, RatingEmoji>(
-    votes.map((v) => [v.country, v.rating]),
-  );
+  const voteRecord: Record<string, RatingEmoji> = {};
+  for (const v of votes) {
+    voteRecord[v.country] = v.rating;
+  }
 
   const rated = votes.length;
   const total = songs.length;
@@ -97,64 +97,13 @@ export const VotePage = async ({
         </div>
       )}
 
-      <ActiveSongTracker
+      <VoteSongList
         gameId={game.id}
-        songs={songs.map((s) => ({
-          country: s.country,
-          artist: s.artist,
-          song: s.song,
-          flag: s.flag,
-        }))}
+        songs={songs}
+        voterName={voterName}
+        votes={voteRecord}
+        isClosed={isClosed}
       />
-
-      <ul className="mt-6" data-song-list>
-        {songs.map((song, idx) => {
-          const currentRating = voteMap.get(song.country);
-          const mins = Math.floor(song.durationSec / 60);
-          const secs = song.durationSec % 60;
-          const duration = `${mins}:${String(secs).padStart(2, "0")}`;
-          return (
-            <li
-              key={song.id}
-              data-country={song.country}
-              className={`relative flex items-center justify-between gap-4 pt-4 ${
-                idx !== songs.length - 1 && "border-b border-gray-800/60 pb-4"
-              }`}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="font-semibold text-gray-100">
-                  {song.flag} {song.country}
-                </div>
-                <div className="text-sm text-gray-500">
-                  {song.artist} –{" "}
-                  {song.youtubeId ? (
-                    <a
-                      href={`https://www.youtube.com/watch?v=${song.youtubeId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-indigo-400 no-underline hover:text-indigo-300"
-                    >
-                      {song.song}
-                    </a>
-                  ) : (
-                    song.song
-                  )}
-                  {song.durationSec > 0 && (
-                    <span className="ml-1.5 text-gray-600">({duration})</span>
-                  )}
-                </div>
-              </div>
-              <RatingButtons
-                gameId={game.id}
-                voterName={voterName}
-                country={song.country}
-                currentRating={currentRating}
-                readOnly={isClosed}
-              />
-            </li>
-          );
-        })}
-      </ul>
 
       {songs.length === 0 && (
         <p className="mt-8 text-gray-500">No songs found.</p>

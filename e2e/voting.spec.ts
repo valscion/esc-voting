@@ -311,6 +311,11 @@ test.describe("ESC Voting App", () => {
 
       await gotoAndHydrate(page, `/${token}/dashboard`);
 
+      // Initially should show "No song currently playing"
+      await expect(page.locator("body")).toContainText(
+        "No song currently playing",
+      );
+
       // Click the first song to activate it
       const firstSong = page.locator("button[data-song-country]").first();
       await firstSong.click();
@@ -318,14 +323,19 @@ test.describe("ESC Voting App", () => {
       // Should show as pressed
       await expect(firstSong).toHaveAttribute("aria-pressed", "true");
 
-      // Should show the "Now playing" banner
-      await expect(page.locator("body")).toContainText("Now playing");
+      // Should show the "Now playing" banner with song info
+      await expect(page.locator("body")).toContainText("Now playing:");
 
       // Click again to deactivate
       await firstSong.click();
 
       // Should no longer be pressed
       await expect(firstSong).toHaveAttribute("aria-pressed", "false");
+
+      // Should show "No song currently playing" again
+      await expect(page.locator("body")).toContainText(
+        "No song currently playing",
+      );
     });
 
     test("dashboard song change is reflected in vote page via aria-live", async ({
