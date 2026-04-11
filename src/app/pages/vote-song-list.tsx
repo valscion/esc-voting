@@ -77,14 +77,24 @@ export function VoteSongList({
                   )}
                 </div>
               </div>
-              <RatingButtons
-                gameId={gameId}
-                voterName={voterName}
-                country={song.country}
-                currentRating={currentRating}
-                assumedRating={assumedRating}
-                readOnly={isClosed}
-              />
+              <div>
+                <RatingButtons
+                  gameId={gameId}
+                  voterName={voterName}
+                  country={song.country}
+                  currentRating={currentRating}
+                  assumedRating={assumedRating}
+                  readOnly={isClosed}
+                />
+                {assumedRating && (
+                  <span
+                    className="ml-2 self-center text-xs text-gray-600"
+                    title="Score assumed from median of other votes"
+                  >
+                    (assumed rating)
+                  </span>
+                )}
+              </div>
             </li>
           );
         })}

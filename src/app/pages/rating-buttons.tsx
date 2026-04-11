@@ -61,7 +61,7 @@ export function RatingButtons({
             className={`rounded-xl border-2 p-1.5 text-2xl leading-none transition-all ${
               isDisplayed
                 ? isAssumed
-                  ? "border-dashed border-gray-500 bg-gray-900/40 opacity-50"
+                  ? "border-indigo-800 bg-indigo-950/60 shadow-[0_0_12px_rgba(99,102,241,0.15)] border-dashed"
                   : "border-indigo-500 bg-indigo-950/60 shadow-[0_0_12px_rgba(99,102,241,0.3)]"
                 : "border-transparent bg-transparent hover:bg-gray-800"
             } ${isPending || readOnly ? "cursor-not-allowed" : "cursor-pointer"} ${readOnly && !isDisplayed ? "opacity-40" : ""}`}
@@ -70,11 +70,6 @@ export function RatingButtons({
           </button>
         );
       })}
-      {isAssumed && (
-        <span className="ml-1 self-center text-xs text-gray-600" title="Score assumed from median of other votes">
-          (assumed)
-        </span>
-      )}
     </div>
   );
 }
