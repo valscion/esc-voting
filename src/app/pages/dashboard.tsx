@@ -1,4 +1,5 @@
 import { getGameByToken, getSongs, getResultsByScore } from "@/app/data";
+import { ESC_MONTAGE_DATA } from "@/app/shared/constants";
 import { DashboardControls } from "./dashboard-controls";
 import { GameControls } from "./game-controls";
 import { ResultsReveal } from "./results-reveal";
@@ -58,6 +59,19 @@ export const DashboardPage = async ({
         Select the song currently being played. All connected voters will see
         the active song highlighted in real time.
       </p>
+      <p className="mt-2">
+        <a
+          href={`/${token}/tv`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-indigo-400 no-underline transition-colors hover:text-indigo-300"
+        >
+          📺 Open TV Display
+        </a>
+        <span className="ml-2 text-xs text-gray-600">
+          — Open this on your TV screen
+        </span>
+      </p>
 
       <DashboardControls
         gameId={game.id}
@@ -66,8 +80,11 @@ export const DashboardPage = async ({
           artist: s.artist,
           song: s.song,
           flag: s.flag,
+          youtubeId: s.youtubeId,
+          durationSec: s.durationSec,
         }))}
         escYear={game.escYear}
+        montageYoutubeId={ESC_MONTAGE_DATA[game.escYear]?.youtubeId ?? ""}
       />
 
       <GameControls token={token} closed={false} />

@@ -12,6 +12,7 @@ import { Home } from "@/app/pages/home";
 import { GamePage } from "@/app/pages/game";
 import { VotePage } from "@/app/pages/vote";
 import { DashboardPage } from "@/app/pages/dashboard";
+import { TVDisplayPage } from "@/app/pages/tv-display";
 
 export { Database } from "@/db/durableObject";
 export { SyncedStateServer };
@@ -24,5 +25,6 @@ export default defineApp([
     route("/:token", GamePage),
     route("/:token/votes/:voterName", VotePage),
     route("/:token/dashboard", DashboardPage),
+    route("/:token/tv", TVDisplayPage),
   ]),
 ]);
