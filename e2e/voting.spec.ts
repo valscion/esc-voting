@@ -147,8 +147,8 @@ test.describe("ESC Voting App", () => {
       await expect(page).toHaveURL(new RegExp(`/${token}/votes/`));
 
       // Should show the rating legend
-      await expect(page.locator("body")).toContainText("🔥");
-      await expect(page.locator("body")).toContainText("💀");
+      await expect(page.locator("body")).toContainText("🤩");
+      await expect(page.locator("body")).toContainText("🤮");
 
       // Should show the progress indicator
       await expect(page.locator("body")).toContainText("countries rated");
