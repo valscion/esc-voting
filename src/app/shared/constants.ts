@@ -30,6 +30,7 @@ export interface Game {
   token: string;
   closed: number;
   created_at: string;
+  montageYoutubeId: string;
 }
 
 export interface Song {
