@@ -1,5 +1,6 @@
 import { getGameByToken, getSongs, getResultsByScore } from "@/app/data";
 import { DashboardControls } from "./dashboard-controls";
+import { GameControls } from "./game-controls";
 import { ResultsReveal } from "./results-reveal";
 
 export const DashboardPage = async ({
@@ -32,6 +33,9 @@ export const DashboardPage = async ({
     return (
       <main>
         <ResultsReveal token={token} results={results} />
+        <div className="mx-auto max-w-4xl px-6 pb-10">
+          <GameControls token={token} closed={true} />
+        </div>
       </main>
     );
   }
@@ -64,6 +68,8 @@ export const DashboardPage = async ({
           flag: s.flag,
         }))}
       />
+
+      <GameControls token={token} closed={false} />
     </main>
   );
 };

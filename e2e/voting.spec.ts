@@ -252,14 +252,18 @@ test.describe("ESC Voting App", () => {
         firstRatingGroup.locator("button").first(),
       ).toHaveAttribute("aria-pressed", "true");
 
-      // Go back to game page and wait for hydration
-      await gotoAndHydrate(page, `/${token}`);
+      // Go to the dashboard and wait for hydration
+      await gotoAndHydrate(page, `/${token}/dashboard`);
 
       // Close the game
       page.on("dialog", (dialog) => dialog.accept());
       await page.getByText("Stop voting now").click();
 
-      // Should show closed message
+      // Should show results page after closing
+      await expect(page.locator("h1")).toContainText("Final Results");
+
+      // Navigate to game page - should show closed message
+      await page.goto(`/${token}`);
       await expect(page.locator("body")).toContainText("Voting is closed");
 
       // Navigate to vote page - buttons should be disabled
@@ -273,8 +277,8 @@ test.describe("ESC Voting App", () => {
     test("can delete a game", async ({ page }) => {
       const token = await createGame(page);
 
-      // Wait for game controls to be hydrated
-      await page.waitForLoadState("networkidle");
+      // Go to the dashboard and wait for hydration
+      await gotoAndHydrate(page, `/${token}/dashboard`);
 
       // Delete the game
       page.on("dialog", (dialog) => dialog.accept());
@@ -286,6 +290,24 @@ test.describe("ESC Voting App", () => {
       // The game should no longer exist
       await page.goto(`/${token}`);
       await expect(page.locator("h1")).toContainText("Game not found");
+    });
+
+    test("game page has a link to the dashboard", async ({ page }) => {
+      const token = await createGame(page);
+
+      // Should show a dashboard link
+      const dashboardLink = page.locator(`a[href="/${token}/dashboard"]`);
+      await expect(dashboardLink).toBeVisible();
+      await expect(dashboardLink).toContainText("Open dashboard");
+
+      // Game controls should NOT be on the game page
+      await expect(page.getByText("Stop voting now")).not.toBeVisible();
+      await expect(page.getByText("Delete game")).not.toBeVisible();
+
+      // Clicking it navigates to the dashboard
+      await dashboardLink.click();
+      await expect(page).toHaveURL(`/${token}/dashboard`);
+      await expect(page.locator("h1")).toContainText("Song Dashboard");
     });
   });
 
@@ -386,14 +408,10 @@ test.describe("ESC Voting App", () => {
 
       await expect(bobSecondGroup).not.toHaveCSS("opacity", "0.6");
 
-      // --- Close the game ---
-      await gotoAndHydrate(page, `/${token}`);
+      // --- Close the game from the dashboard ---
+      await gotoAndHydrate(page, `/${token}/dashboard`);
       page.on("dialog", (dialog) => dialog.accept());
       await page.getByText("Stop voting now").click();
-      await expect(page.locator("body")).toContainText("Voting is closed");
-
-      // --- Navigate to the dashboard (now shows results) ---
-      await gotoAndHydrate(page, `/${token}/dashboard`);
 
       // Should show the results splash screen
       await expect(page.locator("h1")).toContainText("Final Results");
