@@ -11,6 +11,7 @@ interface RatingButtonsProps {
   currentRating: RatingEmoji | undefined;
   assumedRating?: RatingEmoji;
   readOnly?: boolean;
+  songIndex?: number;
 }
 
 export function RatingButtons({
@@ -20,6 +21,7 @@ export function RatingButtons({
   currentRating,
   assumedRating,
   readOnly,
+  songIndex,
 }: RatingButtonsProps) {
   const [selected, setSelected] = useState<RatingEmoji | undefined>(
     currentRating,
@@ -27,7 +29,7 @@ export function RatingButtons({
   const [isPending, startTransition] = useTransition();
 
   const handleRate = (emoji: RatingEmoji) => {
-    if (readOnly) return;
+    if (readOnly || isPending) return;
     startTransition(async () => {
       setSelected(emoji);
       await submitVote(gameId, voterName, country, emoji);
@@ -44,13 +46,16 @@ export function RatingButtons({
       role="group"
       aria-label={`Rate ${country}`}
     >
-      {(Object.keys(RATINGS) as RatingEmoji[]).map((emoji) => {
+      {(Object.keys(RATINGS) as RatingEmoji[]).map((emoji, ratingIdx) => {
         const isDisplayed = displayEmoji === emoji;
         return (
           <button
             key={emoji}
             onClick={() => handleRate(emoji)}
-            disabled={isPending || readOnly}
+            disabled={readOnly}
+            aria-disabled={isPending || readOnly}
+            data-song-index={songIndex}
+            data-rating-index={ratingIdx}
             title={
               isAssumed && isDisplayed
                 ? `${RATINGS[emoji]} (assumed – you didn't vote)`

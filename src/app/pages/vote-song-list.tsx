@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useActiveSong } from "./use-active-song";
 import { RatingButtons } from "./rating-buttons";
 import type { Song, RatingEmoji } from "@/app/shared/constants";
@@ -23,6 +24,48 @@ export function VoteSongList({
 }: VoteSongListProps) {
   const activeSong = useActiveSong(gameId);
 
+  const handleGridKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLUListElement>) => {
+      const target = e.target;
+      if (!(target instanceof HTMLButtonElement)) return;
+
+      const songIndex = target.dataset.songIndex;
+      const ratingIndex = target.dataset.ratingIndex;
+      if (songIndex == null || ratingIndex == null) return;
+
+      const si = parseInt(songIndex, 10);
+      const ri = parseInt(ratingIndex, 10);
+      let nextSi = si;
+      let nextRi = ri;
+
+      switch (e.key) {
+        case "ArrowUp":
+          nextSi = si - 1;
+          break;
+        case "ArrowDown":
+          nextSi = si + 1;
+          break;
+        case "ArrowLeft":
+          nextRi = ri - 1;
+          break;
+        case "ArrowRight":
+          nextRi = ri + 1;
+          break;
+        default:
+          return;
+      }
+
+      const next = e.currentTarget.querySelector<HTMLButtonElement>(
+        `button[data-song-index="${nextSi}"][data-rating-index="${nextRi}"]`,
+      );
+      if (next) {
+        e.preventDefault();
+        next.focus();
+      }
+    },
+    [],
+  );
+
   const activeInfo = activeSong
     ? songs.find((s) => s.country === activeSong)
     : null;
@@ -35,7 +78,7 @@ export function VoteSongList({
           : ""}
       </div>
 
-      <ul className="mt-6">
+      <ul className="mt-6" onKeyDown={handleGridKeyDown}>
         {songs.map((song, idx) => {
           const currentRating = votes[song.country];
           const assumedRating = assumedVotes[song.country];
@@ -85,6 +128,7 @@ export function VoteSongList({
                   currentRating={currentRating}
                   assumedRating={assumedRating}
                   readOnly={isClosed}
+                  songIndex={idx}
                 />
                 {assumedRating && (
                   <span
