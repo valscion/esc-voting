@@ -2,10 +2,10 @@
 
 import { useRef, useCallback, useEffect } from "react";
 import ReactPlayer from "react-player";
-import { ESC_MONTAGE_TIMESTAMPS } from "@/app/shared/constants";
 
 interface MontagePlayerProps {
   youtubeId: string;
+  timestamps: { startSec: number; country: string }[];
   onSongChange: (country: string | null) => void;
   onEnded: () => void;
 }
@@ -14,9 +14,12 @@ interface MontagePlayerProps {
  * Given the current playback time in seconds, returns the country name
  * of the song currently playing in the montage video.
  */
-function getCountryAtTime(seconds: number): string | null {
+function getCountryAtTime(
+  seconds: number,
+  timestamps: { startSec: number; country: string }[],
+): string | null {
   let result: string | null = null;
-  for (const entry of ESC_MONTAGE_TIMESTAMPS) {
+  for (const entry of timestamps) {
     if (seconds >= entry.startSec) {
       result = entry.country;
     } else {
@@ -28,6 +31,7 @@ function getCountryAtTime(seconds: number): string | null {
 
 export function MontagePlayer({
   youtubeId,
+  timestamps,
   onSongChange,
   onEnded,
 }: MontagePlayerProps) {
@@ -38,12 +42,12 @@ export function MontagePlayer({
     const el = playerRef.current;
     if (!el) return;
     const currentTime = el.currentTime;
-    const country = getCountryAtTime(currentTime);
+    const country = getCountryAtTime(currentTime, timestamps);
     if (country !== lastCountryRef.current) {
       lastCountryRef.current = country;
       onSongChange(country);
     }
-  }, [onSongChange]);
+  }, [onSongChange, timestamps]);
 
   const handleEnded = useCallback(() => {
     lastCountryRef.current = null;

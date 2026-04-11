@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSyncedState } from "rwsdk/use-synced-state/client";
+import { ESC_MONTAGE_DATA } from "@/app/shared/constants";
 import { MontagePlayer } from "./montage-player";
 
 interface SongInfo {
@@ -14,16 +15,17 @@ interface SongInfo {
 interface DashboardControlsProps {
   gameId: string;
   songs: SongInfo[];
-  montageYoutubeId: string;
+  escYear: number;
 }
 
-export function DashboardControls({ gameId, songs, montageYoutubeId }: DashboardControlsProps) {
+export function DashboardControls({ gameId, songs, escYear }: DashboardControlsProps) {
   const [activeSong, setActiveSong] = useSyncedState<string | null>(
     null,
     "activeSong",
     gameId,
   );
   const [isMontageActive, setIsMontageActive] = useState(false);
+  const montageData = ESC_MONTAGE_DATA[escYear];
 
   const handleMontageToggle = () => {
     if (isMontageActive) {
@@ -37,7 +39,7 @@ export function DashboardControls({ gameId, songs, montageYoutubeId }: Dashboard
   return (
     <div className="mt-8">
       {/* Montage controls */}
-      {montageYoutubeId && (
+      {montageData && (
         <div className="mb-6">
           <button
             type="button"
@@ -54,9 +56,10 @@ export function DashboardControls({ gameId, songs, montageYoutubeId }: Dashboard
       )}
 
       {/* Montage video player */}
-      {isMontageActive && montageYoutubeId && (
+      {isMontageActive && montageData && (
         <MontagePlayer
-          youtubeId={montageYoutubeId}
+          youtubeId={montageData.youtubeId}
+          timestamps={montageData.timestamps}
           onSongChange={(country) => setActiveSong(country)}
           onEnded={() => {
             setIsMontageActive(false);

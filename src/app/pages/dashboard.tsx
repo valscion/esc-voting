@@ -67,7 +67,7 @@ export const DashboardPage = async ({
           song: s.song,
           flag: s.flag,
         }))}
-        montageYoutubeId={game.montageYoutubeId ?? ""}
+        escYear={game.escYear}
       />
 
       <GameControls token={token} closed={false} />

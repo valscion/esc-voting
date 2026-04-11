@@ -101,13 +101,13 @@ export const migrations = {
       await db.schema.alterTable("songs").dropColumn("durationSec").execute();
     },
   },
-  "004_add_montage_youtube_id": {
+  "004_add_esc_year": {
     async up(db) {
       return [
         await db.schema
           .alterTable("games")
-          .addColumn("montageYoutubeId", "text", (col) =>
-            col.notNull().defaultTo(""),
+          .addColumn("escYear", "integer", (col) =>
+            col.notNull().defaultTo(2026),
           )
           .execute(),
       ];
@@ -116,7 +116,7 @@ export const migrations = {
     async down(db) {
       await db.schema
         .alterTable("games")
-        .dropColumn("montageYoutubeId")
+        .dropColumn("escYear")
         .execute();
     },
   },
