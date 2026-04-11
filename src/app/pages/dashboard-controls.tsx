@@ -130,7 +130,7 @@ export function DashboardControls({ gameId, songs, escYear, montageYoutubeId }: 
   return (
     <div className="mt-8">
       {/* Montage controls */}
-      {(montageData || montageYoutubeId) && (
+      {montageData && (
         <div className="mb-6">
           <button
             type="button"
