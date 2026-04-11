@@ -12,7 +12,7 @@
 
 import { db } from "@/db";
 import type { Game, Song, Voter, Vote, RatingEmoji } from "@/app/shared/constants";
-import { ESC_SONGS, RATING_SCORES } from "@/app/shared/constants";
+import { ESC_SONGS, ESC_MONTAGE_YOUTUBE_ID, RATING_SCORES } from "@/app/shared/constants";
 
 export type { Game, Song, Voter, Vote, RatingEmoji };
 export { RATINGS, RATING_SCORES } from "@/app/shared/constants";
@@ -56,7 +56,7 @@ async function generateUniqueToken(): Promise<string> {
 
 export async function createGame(
   voterNames: string[],
-  montageYoutubeId: string = "",
+  montageYoutubeId: string = ESC_MONTAGE_YOUTUBE_ID,
 ): Promise<Game> {
   const gameId = crypto.randomUUID();
   const token = await generateUniqueToken();

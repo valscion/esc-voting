@@ -57,6 +57,12 @@ export interface Vote {
 }
 
 /**
+ * The default montage YouTube video ID for ESC 2026.
+ * Source: https://youtu.be/1jnR-m5u5yQ
+ */
+export const ESC_MONTAGE_YOUTUBE_ID = "1jnR-m5u5yQ";
+
+/**
  * The set of ESC 2026 songs. Used as source of truth when creating a new game.
  *
  * Ordered by the official running order for each semi-final.
