@@ -97,7 +97,7 @@ export const VotePage = async ({
       )}
 
       <ul className="mt-6">
-        {songs.map((song) => {
+        {songs.map((song, idx) => {
           const currentRating = voteMap.get(song.country);
           const mins = Math.floor(song.durationSec / 60);
           const secs = song.durationSec % 60;
@@ -105,13 +105,15 @@ export const VotePage = async ({
           return (
             <li
               key={song.id}
-              className="flex items-center justify-between gap-4 border-b border-gray-800/60 py-4"
+              className={`flex items-center justify-between gap-4 pt-4 ${
+                idx !== songs.length - 1 && "border-b border-gray-800/60 pb-4"
+              }`}
             >
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-gray-100">
                   {song.flag} {song.country}
                 </div>
-                <div className="truncate text-sm text-gray-500">
+                <div className="text-sm text-gray-500">
                   {song.artist} –{" "}
                   {song.youtubeId ? (
                     <a
