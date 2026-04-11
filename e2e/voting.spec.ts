@@ -288,4 +288,120 @@ test.describe("ESC Voting App", () => {
       await expect(page.locator("h1")).toContainText("Game not found");
     });
   });
+
+  test.describe("Dashboard", () => {
+    test("shows the dashboard with song list", async ({ page }) => {
+      const token = await createGame(page);
+
+      await gotoAndHydrate(page, `/${token}/dashboard`);
+
+      // Should show the dashboard heading
+      await expect(page.locator("h1")).toContainText("Song Dashboard");
+
+      // Should show song buttons
+      const songButtons = page.locator("button[data-song-country]");
+      await expect(songButtons.first()).toBeVisible();
+
+      // Should have a back link
+      await expect(page.locator(`a[href="/${token}"]`)).toBeVisible();
+    });
+
+    test("can select and deselect active song", async ({ page }) => {
+      const token = await createGame(page);
+
+      await gotoAndHydrate(page, `/${token}/dashboard`);
+
+      // Initially should show "No song currently playing"
+      await expect(page.locator("body")).toContainText(
+        "No song currently playing",
+      );
+
+      // Click the first song to activate it
+      const firstSong = page.locator("button[data-song-country]").first();
+      await firstSong.click();
+
+      // Should show as pressed
+      await expect(firstSong).toHaveAttribute("aria-pressed", "true");
+
+      // Should show the "Now playing" banner with song info
+      await expect(page.locator("body")).toContainText("Now playing:");
+
+      // Click again to deactivate
+      await firstSong.click();
+
+      // Should no longer be pressed
+      await expect(firstSong).toHaveAttribute("aria-pressed", "false");
+
+      // Should show "No song currently playing" again
+      await expect(page.locator("body")).toContainText(
+        "No song currently playing",
+      );
+    });
+
+    test("dashboard song change is reflected in vote page via aria-live", async ({
+      browser,
+    }) => {
+      // Use two separate browser contexts/pages
+      const context = await browser.newContext();
+      const dashboardPage = await context.newPage();
+      const votePage = await context.newPage();
+
+      // Create a game using the dashboard page
+      const token = await createGame(dashboardPage);
+
+      // Navigate dashboard page to the dashboard
+      await gotoAndHydrate(dashboardPage, `/${token}/dashboard`);
+
+      // Navigate vote page to the first voter's vote page
+      await gotoAndHydrate(votePage, `/${token}`);
+      const firstVoterLink = votePage.locator("ul a").first();
+      await firstVoterLink.click();
+      await votePage.waitForURL(new RegExp(`/${token}/votes/`));
+      await votePage.waitForLoadState("networkidle");
+
+      // Initially the aria-live region should be empty
+      const nowPlaying = votePage.locator('[data-testid="now-playing"]');
+      await expect(nowPlaying).toHaveText("");
+
+      // Click the first song on the dashboard to set it as active
+      const firstSongButton = dashboardPage
+        .locator("button[data-song-country]")
+        .first();
+      const firstCountry = await firstSongButton.getAttribute(
+        "data-song-country",
+      );
+      await firstSongButton.click();
+      await expect(firstSongButton).toHaveAttribute("aria-pressed", "true");
+
+      // The vote page aria-live region should update with the song info
+      await expect(nowPlaying).toContainText(`Now playing`, {
+        timeout: 10000,
+      });
+      await expect(nowPlaying).toContainText(firstCountry!);
+
+      // Switch to a different song on the dashboard
+      const secondSongButton = dashboardPage
+        .locator("button[data-song-country]")
+        .nth(1);
+      const secondCountry = await secondSongButton.getAttribute(
+        "data-song-country",
+      );
+      await secondSongButton.click();
+      await expect(secondSongButton).toHaveAttribute("aria-pressed", "true");
+
+      // The vote page should now show the second song
+      await expect(nowPlaying).toContainText(secondCountry!, {
+        timeout: 10000,
+      });
+
+      // Stop playing (click the same button again to deselect)
+      await secondSongButton.click();
+      await expect(secondSongButton).toHaveAttribute("aria-pressed", "false");
+
+      // The aria-live region should be empty again
+      await expect(nowPlaying).toHaveText("", { timeout: 10000 });
+
+      await context.close();
+    });
+  });
 });
