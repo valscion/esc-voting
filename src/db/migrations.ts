@@ -101,4 +101,23 @@ export const migrations = {
       await db.schema.alterTable("songs").dropColumn("durationSec").execute();
     },
   },
+  "004_add_montage_youtube_id": {
+    async up(db) {
+      return [
+        await db.schema
+          .alterTable("games")
+          .addColumn("montageYoutubeId", "text", (col) =>
+            col.notNull().defaultTo(""),
+          )
+          .execute(),
+      ];
+    },
+
+    async down(db) {
+      await db.schema
+        .alterTable("games")
+        .dropColumn("montageYoutubeId")
+        .execute();
+    },
+  },
 } satisfies Migrations;
