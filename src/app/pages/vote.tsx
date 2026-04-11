@@ -111,7 +111,7 @@ export const VotePage = async ({
                 <div className="font-semibold text-gray-100">
                   {song.flag} {song.country}
                 </div>
-                <div className="truncate text-sm text-gray-500">
+                <div className="text-sm text-gray-500">
                   {song.artist} –{" "}
                   {song.youtubeId ? (
                     <a
