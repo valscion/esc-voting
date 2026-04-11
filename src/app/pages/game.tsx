@@ -4,7 +4,6 @@ import {
   getSongs,
   getAllVotes,
 } from "@/app/data";
-import { GameControls } from "./game-controls";
 
 export const GamePage = async ({
   params,
@@ -87,7 +86,14 @@ export const GamePage = async ({
         })}
       </ul>
 
-      <GameControls token={token} closed={!!game.closed} />
+      <div className="mt-10 border-t border-gray-800 pt-6">
+        <a
+          href={`/${token}/dashboard`}
+          className="inline-flex items-center gap-2 rounded-2xl border border-indigo-700 bg-indigo-950/40 px-5 py-2.5 text-sm font-medium text-indigo-300 no-underline transition-all hover:bg-indigo-950/70"
+        >
+          📺 Open dashboard
+        </a>
+      </div>
     </main>
   );
 };
