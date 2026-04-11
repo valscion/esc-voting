@@ -12,10 +12,10 @@
 
 import { db } from "@/db";
 import type { Game, Song, Voter, Vote, RatingEmoji } from "@/app/shared/constants";
-import { ESC_SONGS } from "@/app/shared/constants";
+import { ESC_SONGS, RATING_SCORES } from "@/app/shared/constants";
 
 export type { Game, Song, Voter, Vote, RatingEmoji };
-export { RATINGS } from "@/app/shared/constants";
+export { RATINGS, RATING_SCORES } from "@/app/shared/constants";
 
 // --- Token generation ---
 
@@ -224,4 +224,70 @@ export async function getAllVotes(gameId: string): Promise<Vote[]> {
     country: r.country,
     rating: r.rating as RatingEmoji,
   }));
+}
+
+// --- Results ---
+
+export interface SongResult {
+  country: string;
+  artist: string;
+  song: string;
+  flag: string;
+  totalScore: number;
+  voteBreakdown: { voter: string; emoji: RatingEmoji; score: number }[];
+}
+
+/**
+ * Compute results grouped into sections by total score, sorted ascending
+ * (worst first). Each section is a group of songs sharing the same total score.
+ */
+export async function getResultsByScore(
+  gameId: string,
+): Promise<{ score: number; songs: SongResult[] }[]> {
+  const [songs, votes] = await Promise.all([
+    getSongs(gameId),
+    getAllVotes(gameId),
+  ]);
+
+  // Build a map of country → votes
+  const votesByCountry = new Map<string, Vote[]>();
+  for (const v of votes) {
+    const list = votesByCountry.get(v.country) ?? [];
+    list.push(v);
+    votesByCountry.set(v.country, list);
+  }
+
+  // Calculate score for each song
+  const songResults: SongResult[] = songs.map((song) => {
+    const songVotes = votesByCountry.get(song.country) ?? [];
+    const breakdown = songVotes.map((v) => ({
+      voter: v.voter,
+      emoji: v.rating,
+      score: RATING_SCORES[v.rating] ?? 0,
+    }));
+    const totalScore = breakdown.reduce((sum, b) => sum + b.score, 0);
+    return {
+      country: song.country,
+      artist: song.artist,
+      song: song.song,
+      flag: song.flag,
+      totalScore,
+      voteBreakdown: breakdown,
+    };
+  });
+
+  // Group by score
+  const groupMap = new Map<number, SongResult[]>();
+  for (const result of songResults) {
+    const list = groupMap.get(result.totalScore) ?? [];
+    list.push(result);
+    groupMap.set(result.totalScore, list);
+  }
+
+  // Sort groups ascending (lowest score first → revealed first)
+  const groups = Array.from(groupMap.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([score, songs]) => ({ score, songs }));
+
+  return groups;
 }

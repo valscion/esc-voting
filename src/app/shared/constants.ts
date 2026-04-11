@@ -4,14 +4,26 @@
  */
 
 export const RATINGS = {
-  "🔥": "Fire – absolute banger",
-  "❤️": "Heart – really love it",
-  "😊": "Smile – it's good",
-  "😐": "Meh – not feeling it",
-  "💀": "Dead – please no",
+  "🤩": "Star-struck – absolute banger",
+  "😁": "Grinning – really love it",
+  "😐": "Meh – it's okay",
+  "😴": "Sleepy – not feeling it",
+  "🤮": "Puke – please no",
 } as const;
 
 export type RatingEmoji = keyof typeof RATINGS;
+
+/**
+ * Score assigned to each rating emoji, used for computing final results.
+ * Best emoji scores highest.
+ */
+export const RATING_SCORES: Record<RatingEmoji, number> = {
+  "🤩": 5,
+  "😁": 3,
+  "😐": 1,
+  "😴": 0,
+  "🤮": -1,
+};
 
 export interface Game {
   id: string;

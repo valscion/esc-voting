@@ -147,8 +147,8 @@ test.describe("ESC Voting App", () => {
       await expect(page).toHaveURL(new RegExp(`/${token}/votes/`));
 
       // Should show the rating legend
-      await expect(page.locator("body")).toContainText("🔥");
-      await expect(page.locator("body")).toContainText("💀");
+      await expect(page.locator("body")).toContainText("🤩");
+      await expect(page.locator("body")).toContainText("🤮");
 
       // Should show the progress indicator
       await expect(page.locator("body")).toContainText("countries rated");
@@ -336,6 +336,92 @@ test.describe("ESC Voting App", () => {
       await expect(page.locator("body")).toContainText(
         "No song currently playing",
       );
+    });
+
+    test("results reveal walks through score groups after voting is closed", async ({
+      page,
+    }) => {
+      const token = await createGame(page);
+
+      // --- Cast votes for 2 songs as both voters ---
+      // Alice: 🤩 on first song (Moldova), 🤮 on second song (Sweden)
+      await page.locator("ul a").first().click();
+      await page.waitForLoadState("networkidle");
+
+      const firstGroup = page.locator('[role="group"]').first();
+      await firstGroup.locator("button").first().click(); // 🤩
+      await expect(firstGroup.locator("button").first()).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+
+      const secondGroup = page.locator('[role="group"]').nth(1);
+      await secondGroup.locator("button").last().click(); // 🤮
+      await expect(secondGroup.locator("button").last()).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+
+      // Wait for server action to complete
+      await expect(secondGroup).not.toHaveCSS("opacity", "0.6");
+
+      // Bob: same votes
+      await gotoAndHydrate(page, `/${token}`);
+      await page.locator("ul a").nth(1).click();
+      await page.waitForLoadState("networkidle");
+
+      const bobFirstGroup = page.locator('[role="group"]').first();
+      await bobFirstGroup.locator("button").first().click(); // 🤩
+      await expect(bobFirstGroup.locator("button").first()).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+
+      const bobSecondGroup = page.locator('[role="group"]').nth(1);
+      await bobSecondGroup.locator("button").last().click(); // 🤮
+      await expect(bobSecondGroup.locator("button").last()).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+
+      await expect(bobSecondGroup).not.toHaveCSS("opacity", "0.6");
+
+      // --- Close the game ---
+      await gotoAndHydrate(page, `/${token}`);
+      page.on("dialog", (dialog) => dialog.accept());
+      await page.getByText("Stop voting now").click();
+      await expect(page.locator("body")).toContainText("Voting is closed");
+
+      // --- Navigate to the dashboard (now shows results) ---
+      await gotoAndHydrate(page, `/${token}/dashboard`);
+
+      // Should show the results splash screen
+      await expect(page.locator("h1")).toContainText("Final Results");
+      await expect(page.locator("body")).toContainText("Reveal first group");
+
+      // Click to reveal the first group (lowest score = -2, Sweden)
+      await page.getByText("Reveal first group →").click();
+
+      // Should show group 1 with Score: -2 and Sweden
+      await expect(page.locator("body")).toContainText("Group 1 of");
+      await expect(page.locator("h2")).toContainText("Score: -2");
+      await expect(page.locator("body")).toContainText("Sweden");
+
+      // Click through all middle groups (score 0 songs) until the winner button appears
+      while (
+        await page.getByText("Reveal next group →").isVisible().catch(() => false)
+      ) {
+        await page.getByText("Reveal next group →").click();
+      }
+
+      // The "Reveal the winner!" button should now be visible
+      await expect(page.getByText("Reveal the winner!")).toBeVisible();
+      await page.getByText("Reveal the winner!").click();
+
+      // Should show the winner section with Moldova
+      await expect(page.locator("h2")).toContainText("Winner!");
+      await expect(page.locator("body")).toContainText("Moldova");
+      await expect(page.locator("body")).toContainText("All results revealed");
     });
 
     test("dashboard song change is reflected in vote page via aria-live", async ({

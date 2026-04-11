@@ -1,5 +1,6 @@
-import { getGameByToken, getSongs } from "@/app/data";
+import { getGameByToken, getSongs, getResultsByScore } from "@/app/data";
 import { DashboardControls } from "./dashboard-controls";
+import { ResultsReveal } from "./results-reveal";
 
 export const DashboardPage = async ({
   params,
@@ -22,6 +23,15 @@ export const DashboardPage = async ({
         >
           ← Create a new game
         </a>
+      </main>
+    );
+  }
+
+  if (game.closed) {
+    const results = await getResultsByScore(game.id);
+    return (
+      <main>
+        <ResultsReveal token={token} results={results} />
       </main>
     );
   }
