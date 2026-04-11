@@ -300,6 +300,10 @@ test.describe("ESC Voting App", () => {
       await expect(dashboardLink).toBeVisible();
       await expect(dashboardLink).toContainText("Open dashboard");
 
+      // Game controls should NOT be on the game page
+      await expect(page.getByText("Stop voting now")).not.toBeVisible();
+      await expect(page.getByText("Delete game")).not.toBeVisible();
+
       // Clicking it navigates to the dashboard
       await dashboardLink.click();
       await expect(page).toHaveURL(`/${token}/dashboard`);
