@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useSyncedState } from "rwsdk/use-synced-state/client";
+import { ESC_MONTAGE_DATA } from "@/app/shared/constants";
+import { MontagePlayer } from "./montage-player";
 
 interface SongInfo {
   country: string;
@@ -12,17 +15,60 @@ interface SongInfo {
 interface DashboardControlsProps {
   gameId: string;
   songs: SongInfo[];
+  escYear: number;
 }
 
-export function DashboardControls({ gameId, songs }: DashboardControlsProps) {
+export function DashboardControls({ gameId, songs, escYear }: DashboardControlsProps) {
   const [activeSong, setActiveSong] = useSyncedState<string | null>(
     null,
     "activeSong",
     gameId,
   );
+  const [isMontageActive, setIsMontageActive] = useState(false);
+  const montageData = ESC_MONTAGE_DATA[escYear];
+
+  const handleMontageToggle = () => {
+    if (isMontageActive) {
+      setIsMontageActive(false);
+      setActiveSong(null);
+    } else {
+      setIsMontageActive(true);
+    }
+  };
 
   return (
     <div className="mt-8">
+      {/* Montage controls */}
+      {montageData && (
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={handleMontageToggle}
+            className={`rounded-2xl border px-5 py-3 text-sm font-medium transition-all ${
+              isMontageActive
+                ? "border-amber-600 bg-amber-950/40 text-amber-300 hover:border-red-500 hover:text-red-400"
+                : "border-gray-700 bg-gray-900 text-gray-400 hover:border-amber-600 hover:text-amber-300"
+            }`}
+          >
+            {isMontageActive ? "⏹ Stop Montage" : "▶️ Play Montage"}
+          </button>
+        </div>
+      )}
+
+      {/* Montage video player */}
+      {isMontageActive && montageData && (
+        <MontagePlayer
+          youtubeId={montageData.youtubeId}
+          timestamps={montageData.timestamps}
+          onSongChange={(country) => setActiveSong(country)}
+          onEnded={() => {
+            setIsMontageActive(false);
+            setActiveSong(null);
+          }}
+        />
+      )}
+
+      {/* Now playing bar */}
       <div
         className={`mb-6 flex items-center justify-between rounded-2xl px-5 py-3 text-sm font-medium ring-1 ${
           activeSong
@@ -43,7 +89,10 @@ export function DashboardControls({ gameId, songs }: DashboardControlsProps) {
             </span>
             <button
               type="button"
-              onClick={() => setActiveSong(null)}
+              onClick={() => {
+                setActiveSong(null);
+                setIsMontageActive(false);
+              }}
               className="ml-4 rounded-xl border border-gray-700 px-3 py-1.5 text-xs text-gray-400 transition-colors hover:border-red-500 hover:text-red-400"
             >
               ⏹ Stop
@@ -61,9 +110,14 @@ export function DashboardControls({ gameId, songs }: DashboardControlsProps) {
             <li key={song.country}>
               <button
                 type="button"
-                onClick={() =>
-                  setActiveSong(isActive ? null : song.country)
-                }
+                onClick={() => {
+                  if (isActive) {
+                    setActiveSong(null);
+                  } else {
+                    setActiveSong(song.country);
+                    setIsMontageActive(false);
+                  }
+                }}
                 data-song-country={song.country}
                 className={`flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition-all ${
                   isActive

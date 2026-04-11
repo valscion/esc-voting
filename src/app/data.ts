@@ -12,7 +12,7 @@
 
 import { db } from "@/db";
 import type { Game, Song, Voter, Vote, RatingEmoji } from "@/app/shared/constants";
-import { ESC_SONGS, RATING_SCORES } from "@/app/shared/constants";
+import { ESC_SONGS, DEFAULT_ESC_YEAR, RATING_SCORES } from "@/app/shared/constants";
 import { computeMedianScore, scoreToEmoji } from "@/app/shared/scoring";
 
 export type { Game, Song, Voter, Vote, RatingEmoji };
@@ -57,6 +57,7 @@ async function generateUniqueToken(): Promise<string> {
 
 export async function createGame(
   voterNames: string[],
+  escYear: number = DEFAULT_ESC_YEAR,
 ): Promise<Game> {
   const gameId = crypto.randomUUID();
   const token = await generateUniqueToken();
@@ -64,7 +65,7 @@ export async function createGame(
 
   await db
     .insertInto("games")
-    .values({ id: gameId, token, closed: 0, created_at: now })
+    .values({ id: gameId, token, closed: 0, created_at: now, escYear })
     .execute();
 
   // Insert songs from the constant set, in batches (SQLite variable limit)
@@ -94,7 +95,7 @@ export async function createGame(
       .execute();
   }
 
-  return { id: gameId, token, closed: 0, created_at: now };
+  return { id: gameId, token, closed: 0, created_at: now, escYear };
 }
 
 export async function getGameByToken(token: string): Promise<Game | null> {
@@ -109,6 +110,7 @@ export async function getGameByToken(token: string): Promise<Game | null> {
     token: row.token,
     closed: row.closed,
     created_at: row.created_at,
+    escYear: row.escYear,
   };
 }
 

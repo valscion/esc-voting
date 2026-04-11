@@ -30,6 +30,7 @@ export interface Game {
   token: string;
   closed: number;
   created_at: string;
+  escYear: number;
 }
 
 export interface Song {
@@ -54,6 +55,67 @@ export interface Vote {
   country: string;
   rating: RatingEmoji;
 }
+
+/**
+ * The default ESC year used when creating new games.
+ */
+export const DEFAULT_ESC_YEAR = 2026;
+
+/**
+ * Montage video data keyed by ESC year.
+ *
+ * Each entry contains the YouTube video ID for the montage and a timestamp
+ * mapping that maps the start time (in seconds) of each song segment to its
+ * country name. Only apply timestamps when the year matches — if a year has
+ * no entry here, no montage features are available.
+ */
+export interface MontageData {
+  youtubeId: string;
+  timestamps: { startSec: number; country: string }[];
+}
+
+export const ESC_MONTAGE_DATA: Record<number, MontageData> = {
+  2026: {
+    youtubeId: "1jnR-m5u5yQ",
+    timestamps: [
+      { startSec: 0, country: "Albania" },
+      { startSec: 31, country: "Armenia" },
+      { startSec: 60, country: "Australia" },
+      { startSec: 89, country: "Austria" },
+      { startSec: 118, country: "Azerbaijan" },
+      { startSec: 145, country: "Belgium" },
+      { startSec: 173, country: "Bulgaria" },
+      { startSec: 204, country: "Croatia" },
+      { startSec: 235, country: "Cyprus" },
+      { startSec: 264, country: "Czechia" },
+      { startSec: 296, country: "Denmark" },
+      { startSec: 326, country: "Estonia" },
+      { startSec: 354, country: "Finland" },
+      { startSec: 386, country: "France" },
+      { startSec: 415, country: "Georgia" },
+      { startSec: 444, country: "Germany" },
+      { startSec: 476, country: "Greece" },
+      { startSec: 508, country: "Israel" },
+      { startSec: 539, country: "Italy" },
+      { startSec: 568, country: "Latvia" },
+      { startSec: 597, country: "Lithuania" },
+      { startSec: 629, country: "Luxembourg" },
+      { startSec: 663, country: "Malta" },
+      { startSec: 692, country: "Moldova" },
+      { startSec: 721, country: "Montenegro" },
+      { startSec: 751, country: "Norway" },
+      { startSec: 780, country: "Poland" },
+      { startSec: 810, country: "Portugal" },
+      { startSec: 838, country: "Romania" },
+      { startSec: 869, country: "San Marino" },
+      { startSec: 899, country: "Serbia" },
+      { startSec: 929, country: "Sweden" },
+      { startSec: 959, country: "Switzerland" },
+      { startSec: 988, country: "Ukraine" },
+      { startSec: 1020, country: "United Kingdom" },
+    ],
+  },
+};
 
 /**
  * The set of ESC 2026 songs. Used as source of truth when creating a new game.

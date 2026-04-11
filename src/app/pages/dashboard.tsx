@@ -67,6 +67,7 @@ export const DashboardPage = async ({
           song: s.song,
           flag: s.flag,
         }))}
+        escYear={game.escYear}
       />
 
       <GameControls token={token} closed={false} />
