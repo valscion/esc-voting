@@ -45,7 +45,7 @@ function groupLabel(semifinal: number, half: number): string {
 }
 
 /** Build an ordered list of groups, each containing its songs. */
-function groupSongs(songs: SongInfo[]) {
+function groupSongs(songs: readonly SongInfo[]) {
   const groups: { key: string; label: string; songs: SongInfo[] }[] = [];
   let currentKey = "";
 
