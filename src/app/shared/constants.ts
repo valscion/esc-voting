@@ -220,3 +220,32 @@ export interface Song {
 export function getSongsForYear(year: number): readonly Song[] {
   return (ESC_SONGS_BY_YEAR as Record<number, readonly Song[]>)[year] ?? [];
 }
+
+/**
+ * Sort songs according to the montage order for a given ESC year.
+ * Returns the original array unchanged if no montage data exists.
+ */
+export function sortSongsByMontageOrder<T extends { country: string }>(
+  songs: readonly T[],
+  year: number,
+): readonly T[] {
+  const montageData = ESC_MONTAGE_DATA[year];
+  if (!montageData) return songs;
+
+  const orderMap = new Map(
+    montageData.timestamps.map((t, i) => [t.country, i]),
+  );
+
+  return [...songs].sort((a, b) => {
+    const aIdx = orderMap.get(a.country) ?? Number.MAX_SAFE_INTEGER;
+    const bIdx = orderMap.get(b.country) ?? Number.MAX_SAFE_INTEGER;
+    return aIdx - bIdx;
+  });
+}
+
+/**
+ * Whether montage data is available for a given ESC year.
+ */
+export function hasMontageData(year: number): boolean {
+  return year in ESC_MONTAGE_DATA;
+}

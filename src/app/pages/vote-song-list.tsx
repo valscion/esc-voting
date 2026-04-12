@@ -1,10 +1,15 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useActiveSong } from "./use-active-song";
 import { RatingButtons } from "./rating-buttons";
 import { NoteEditor } from "./note-editor";
-import type { Song, RatingEmoji } from "@/app/shared/constants";
+import {
+  sortSongsByMontageOrder,
+  hasMontageData,
+  type Song,
+  type RatingEmoji,
+} from "@/app/shared/constants";
 
 interface VoteSongListProps {
   gameId: string;
@@ -14,6 +19,7 @@ interface VoteSongListProps {
   assumedVotes?: Record<string, RatingEmoji>;
   notes?: Record<string, string>;
   isClosed: boolean;
+  escYear: number;
 }
 
 export function VoteSongList({
@@ -24,8 +30,17 @@ export function VoteSongList({
   assumedVotes = {},
   notes = {},
   isClosed,
+  escYear,
 }: VoteSongListProps) {
   const activeSong = useActiveSong(gameId);
+  const [montageOrder, setMontageOrder] = useState(false);
+  const showMontageToggle = hasMontageData(escYear);
+
+  const displaySongs = useMemo(
+    () =>
+      montageOrder ? sortSongsByMontageOrder(songs, escYear) : songs,
+    [songs, montageOrder, escYear],
+  );
 
   const handleGridKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLUListElement>) => {
@@ -70,7 +85,7 @@ export function VoteSongList({
   );
 
   const activeInfo = activeSong
-    ? songs.find((s) => s.country === activeSong)
+    ? displaySongs.find((s) => s.country === activeSong)
     : null;
 
   return (
@@ -81,8 +96,24 @@ export function VoteSongList({
           : ""}
       </div>
 
+      {showMontageToggle && (
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={() => setMontageOrder((prev) => !prev)}
+            className={`rounded-2xl border px-4 py-2 text-sm font-medium transition-all ${
+              montageOrder
+                ? "border-amber-600 bg-amber-950/40 text-amber-300 hover:border-amber-500"
+                : "border-gray-700 bg-gray-900 text-gray-400 hover:border-gray-600 hover:text-gray-300"
+            }`}
+          >
+            {montageOrder ? "🎬 Montage order" : "📋 Semi-final order"}
+          </button>
+        </div>
+      )}
+
       <ul className="mt-6" onKeyDown={handleGridKeyDown}>
-        {songs.map((song, idx) => {
+        {displaySongs.map((song, idx) => {
           const currentRating = votes[song.code];
           const assumedRating = assumedVotes[song.code];
           const isActive = activeSong === song.country;
@@ -91,8 +122,9 @@ export function VoteSongList({
           const duration = `${mins}:${String(secs).padStart(2, "0")}`;
 
           // Determine if we need a group separator before this song
-          const prevSong = idx > 0 ? songs[idx - 1] : null;
+          const prevSong = idx > 0 ? displaySongs[idx - 1] : null;
           const groupChanged =
+            !montageOrder &&
             prevSong != null &&
             (song.semifinal !== prevSong.semifinal ||
               song.semifinalHalf !== prevSong.semifinalHalf);
@@ -103,11 +135,11 @@ export function VoteSongList({
             <li
               key={song.code}
               className={`relative ${
-                idx !== songs.length - 1 ? "border-b border-gray-800/60" : ""
+                idx !== displaySongs.length - 1 ? "border-b border-gray-800/60" : ""
               }`}
             >
               {/* Group separator */}
-              {(idx === 0 || groupChanged) && (
+              {!montageOrder && (idx === 0 || groupChanged) && (
                 <div
                   className={`${idx === 0 ? "pb-3" : "border-t-2 border-dashed border-gray-700/60 pb-3 pt-4"}`}
                 >
