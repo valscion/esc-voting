@@ -121,6 +121,15 @@ export function TVPlayer({ gameId, songs, montageYoutubeId, montageTimestamps }:
     }
   }
 
+  // React to tvMode changes: auto-play when entering montage mode
+  const [prevTvMode, setPrevTvMode] = useState<"song" | "montage" | null>(null);
+  if (tvMode !== prevTvMode) {
+    setPrevTvMode(tvMode);
+    if (tvMode === "montage") {
+      setPlaying(true);
+    }
+  }
+
   // React to tvPlayback play/pause commands
   const [prevPlayback, setPrevPlayback] = useState<TVPlayback | null>(null);
   if (tvPlayback !== prevPlayback) {
