@@ -8,7 +8,9 @@ import {
   getGameByToken,
   upsertVote,
   upsertNote,
+  importGame,
   type RatingEmoji,
+  type GameImportData,
 } from "@/app/data";
 import { MAX_NOTE_LENGTH } from "@/app/shared/constants";
 
@@ -59,5 +61,36 @@ export const submitNote = serverAction(
     // Enforce tweet-sized max
     const trimmed = note.slice(0, MAX_NOTE_LENGTH);
     await upsertNote(gameId, voter, country, trimmed);
+  },
+);
+
+export const importGameAction = serverAction(
+  async (jsonString: string, includeRatings: boolean): Promise<Response> => {
+    let data: GameImportData;
+    try {
+      data = JSON.parse(jsonString) as GameImportData;
+    } catch {
+      throw new Error("Invalid JSON data");
+    }
+
+    // Basic validation
+    if (!data.escYear || typeof data.escYear !== "number") {
+      throw new Error("Import must include a numeric 'escYear' field");
+    }
+    if (
+      !Array.isArray(data.voters) ||
+      data.voters.length === 0 ||
+      !data.voters.every(
+        (v: unknown) => typeof v === "string" && (v as string).trim().length > 0,
+      )
+    ) {
+      throw new Error("Import must include a 'voters' array with at least one non-empty name");
+    }
+
+    const game = await importGame(data, includeRatings);
+    return new Response(null, {
+      status: 302,
+      headers: { Location: `/${game.token}` },
+    });
   },
 );

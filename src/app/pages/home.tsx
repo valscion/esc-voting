@@ -1,4 +1,5 @@
 import { GameForm } from "./game-form";
+import { ImportGame } from "./import-game";
 
 export const Home = () => {
   return (
@@ -18,6 +19,16 @@ export const Home = () => {
       </p>
 
       <GameForm />
+
+      <h2 className="mt-10 text-lg font-semibold text-gray-200">
+        Import a game
+      </h2>
+      <p className="mt-1 text-sm text-gray-500">
+        Import a previously exported game from a JSON file. You can choose to
+        import only participants or include their ratings and notes.
+      </p>
+
+      <ImportGame />
     </main>
   );
 };
