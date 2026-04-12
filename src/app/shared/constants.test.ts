@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   getSongsForYear,
   ESC_SONGS_BY_YEAR,
+  ESC_MONTAGE_DATA,
   DEFAULT_ESC_YEAR,
+  sortSongsByMontageOrder,
+  hasMontageData,
   type CountryCode,
   type Song,
 } from "./constants";
@@ -78,5 +81,60 @@ describe("CountryCode type", () => {
     const song: Song = getSongsForYear(2026)[0];
     const code: CountryCode = song.code;
     expect(code).toBe("MDA");
+  });
+});
+
+describe("sortSongsByMontageOrder", () => {
+  it("sorts songs to match the montage timestamp order for a known year", () => {
+    const songs = getSongsForYear(2026);
+    const sorted = sortSongsByMontageOrder(songs, 2026);
+    const montageCountries = ESC_MONTAGE_DATA[2026].timestamps.map(
+      (t) => t.country,
+    );
+
+    const sortedCountries = sorted.map((s) => s.country);
+    expect(sortedCountries).toEqual(montageCountries);
+  });
+
+  it("returns the original array unchanged for an unknown year", () => {
+    const songs = getSongsForYear(2026);
+    const sorted = sortSongsByMontageOrder(songs, 1999);
+    expect(sorted).toBe(songs);
+  });
+
+  it("does not mutate the original array", () => {
+    const songs = getSongsForYear(2026);
+    const originalOrder = songs.map((s) => s.country);
+    sortSongsByMontageOrder(songs, 2026);
+    expect(songs.map((s) => s.country)).toEqual(originalOrder);
+  });
+
+  it("places songs not in montage data at the end", () => {
+    const fakeSongs = [
+      { country: "Atlantis" },
+      { country: "Albania" },
+      { country: "Armenia" },
+    ] as const;
+    const sorted = sortSongsByMontageOrder(fakeSongs, 2026);
+    expect(sorted.map((s) => s.country)).toEqual([
+      "Albania",
+      "Armenia",
+      "Atlantis",
+    ]);
+  });
+
+  it("works with an empty array", () => {
+    const sorted = sortSongsByMontageOrder([], 2026);
+    expect(sorted).toEqual([]);
+  });
+});
+
+describe("hasMontageData", () => {
+  it("returns true for a year with montage data", () => {
+    expect(hasMontageData(2026)).toBe(true);
+  });
+
+  it("returns false for a year without montage data", () => {
+    expect(hasMontageData(1999)).toBe(false);
   });
 });

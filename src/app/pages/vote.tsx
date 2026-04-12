@@ -114,6 +114,7 @@ export const VotePage = async ({
         assumedVotes={assumedVotes}
         notes={voterNotes}
         isClosed={isClosed}
+        escYear={game.escYear}
       />
 
       {songs.length > 0 && (

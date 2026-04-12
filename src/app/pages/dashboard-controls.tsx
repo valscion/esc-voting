@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSyncedState } from "rwsdk/use-synced-state/client";
-import { ESC_MONTAGE_DATA, type CountryCode } from "@/app/shared/constants";
+import { ESC_MONTAGE_DATA, sortSongsByMontageOrder, type CountryCode } from "@/app/shared/constants";
 
 interface SongInfo {
   code: CountryCode;
@@ -45,7 +45,7 @@ function groupLabel(semifinal: number, half: number): string {
 }
 
 /** Build an ordered list of groups, each containing its songs. */
-function groupSongs(songs: SongInfo[]) {
+function groupSongs(songs: readonly SongInfo[]) {
   const groups: { key: string; label: string; songs: SongInfo[] }[] = [];
   let currentKey = "";
 
@@ -88,7 +88,13 @@ export function DashboardControls({ gameId, songs, escYear }: DashboardControlsP
   );
 
   const [isPaused, setIsPaused] = useState(false);
+  const [montageOrder, setMontageOrder] = useState(false);
   const montageData = ESC_MONTAGE_DATA[escYear];
+
+  const displaySongs = useMemo(
+    () => (montageOrder ? sortSongsByMontageOrder(songs, escYear) : songs),
+    [songs, montageOrder, escYear],
+  );
 
   const handleSongClick = (country: string) => {
     const isActive = activeSong === country;
@@ -121,9 +127,9 @@ export function DashboardControls({ gameId, songs, escYear }: DashboardControlsP
 
   const handleSkip = () => {
     if (!activeSong) return;
-    const currentIndex = songs.findIndex((s) => s.country === activeSong);
-    if (currentIndex >= 0 && currentIndex < songs.length - 1) {
-      setActiveSong(songs[currentIndex + 1].country);
+    const currentIndex = displaySongs.findIndex((s) => s.country === activeSong);
+    if (currentIndex >= 0 && currentIndex < displaySongs.length - 1) {
+      setActiveSong(displaySongs[currentIndex + 1].country);
       setTvMode("song");
       setIsPaused(false);
     } else {
@@ -194,7 +200,7 @@ export function DashboardControls({ gameId, songs, escYear }: DashboardControlsP
     ? Math.round(tvProgress.playedFraction * 100)
     : 0;
 
-  const groups = groupSongs(songs);
+  const groups = groupSongs(displaySongs);
 
   return (
     <div className="mt-8">
@@ -332,64 +338,130 @@ export function DashboardControls({ gameId, songs, escYear }: DashboardControlsP
         )}
       </div>
 
-      {/* Song grid grouped by semifinal halves */}
-      {groups.map((group, groupIdx) => (
-        <div key={group.key}>
-          {/* Group separator */}
-          {groupIdx > 0 && (
-            <div className="my-4 border-t-2 border-dashed border-gray-700/60" />
-          )}
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-            {group.label}
-          </h2>
-
-          <ul
-            className="grid gap-2"
-            style={{
-              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-            }}
+      {/* Sort order toggle */}
+      {montageData && (
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={() => setMontageOrder((prev) => !prev)}
+            className={`rounded-2xl border px-4 py-2 text-sm font-medium transition-all ${
+              montageOrder
+                ? "border-amber-600 bg-amber-950/40 text-amber-300 hover:border-amber-500"
+                : "border-gray-700 bg-gray-900 text-gray-400 hover:border-gray-600 hover:text-gray-300"
+            }`}
           >
-            {group.songs.map((song) => {
-              const isActive = activeSong === song.country;
-              return (
-                <li key={song.country}>
-                  <button
-                    type="button"
-                    onClick={() => handleSongClick(song.country)}
-                    data-song-country={song.country}
-                    className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${
-                      isActive
-                        ? "border-indigo-500 bg-indigo-950/50 shadow-[0_0_20px_rgba(99,102,241,0.2)]"
-                        : "border-gray-800 bg-gray-900 hover:border-gray-700 hover:bg-gray-800/80"
-                    }`}
-                    aria-pressed={isActive}
-                    aria-label={
-                      isActive
-                        ? `Stop playing ${song.country}`
-                        : `Play ${song.country}`
-                    }
-                  >
-                    <span className="text-xl" aria-hidden="true">{isActive ? "⏸" : "▶️"}</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-gray-100 text-sm">
-                        {song.flag} {song.country}
-                      </div>
-                      <div className="text-xs text-gray-500 truncate">
-                        {song.artist} – {song.song}
-                        {song.durationSec > 0 && (
-                          <span className="ml-1 text-gray-600">
-                            ({formatDuration(song.durationSec)})
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+            {montageOrder ? "🎬 Montage order" : "📋 Semi-final order"}
+          </button>
         </div>
-      ))}
+      )}
+
+      {/* Song grid */}
+      {montageOrder ? (
+        <ul
+          className="grid gap-2"
+          style={{
+            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+          }}
+        >
+          {displaySongs.map((song) => {
+            const isActive = activeSong === song.country;
+            return (
+              <li key={song.country}>
+                <button
+                  type="button"
+                  onClick={() => handleSongClick(song.country)}
+                  data-song-country={song.country}
+                  className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${
+                    isActive
+                      ? "border-indigo-500 bg-indigo-950/50 shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+                      : "border-gray-800 bg-gray-900 hover:border-gray-700 hover:bg-gray-800/80"
+                  }`}
+                  aria-pressed={isActive}
+                  aria-label={
+                    isActive
+                      ? `Stop playing ${song.country}`
+                      : `Play ${song.country}`
+                  }
+                >
+                  <span className="text-xl" aria-hidden="true">{isActive ? "⏸" : "▶️"}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-gray-100 text-sm">
+                      {song.flag} {song.country}
+                    </div>
+                    <div className="text-xs text-gray-500 truncate">
+                      {song.artist} – {song.song}
+                      {song.durationSec > 0 && (
+                        <span className="ml-1 text-gray-600">
+                          ({formatDuration(song.durationSec)})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        /* Song grid grouped by semifinal halves */
+        groups.map((group, groupIdx) => (
+          <div key={group.key}>
+            {/* Group separator */}
+            {groupIdx > 0 && (
+              <div className="my-4 border-t-2 border-dashed border-gray-700/60" />
+            )}
+            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+              {group.label}
+            </h2>
+
+            <ul
+              className="grid gap-2"
+              style={{
+                gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              }}
+            >
+              {group.songs.map((song) => {
+                const isActive = activeSong === song.country;
+                return (
+                  <li key={song.country}>
+                    <button
+                      type="button"
+                      onClick={() => handleSongClick(song.country)}
+                      data-song-country={song.country}
+                      className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${
+                        isActive
+                          ? "border-indigo-500 bg-indigo-950/50 shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+                          : "border-gray-800 bg-gray-900 hover:border-gray-700 hover:bg-gray-800/80"
+                      }`}
+                      aria-pressed={isActive}
+                      aria-label={
+                        isActive
+                          ? `Stop playing ${song.country}`
+                          : `Play ${song.country}`
+                      }
+                    >
+                      <span className="text-xl" aria-hidden="true">{isActive ? "⏸" : "▶️"}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-gray-100 text-sm">
+                          {song.flag} {song.country}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate">
+                          {song.artist} – {song.song}
+                          {song.durationSec > 0 && (
+                            <span className="ml-1 text-gray-600">
+                              ({formatDuration(song.durationSec)})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))
+      )}
     </div>
   );
 }
