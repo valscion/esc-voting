@@ -12,11 +12,11 @@
  */
 
 import { db } from "@/db";
-import type { Game, Song, StrictSong, Voter, Vote, RatingEmoji } from "@/app/shared/constants";
+import type { Game, Song, Voter, Vote, RatingEmoji } from "@/app/shared/constants";
 import { getSongsForYear, DEFAULT_ESC_YEAR, RATING_SCORES } from "@/app/shared/constants";
 import { computeMedianScore, scoreToEmoji } from "@/app/shared/scoring";
 
-export type { Game, Song, StrictSong, Voter, Vote, RatingEmoji };
+export type { Game, Song, Voter, Vote, RatingEmoji };
 export { RATINGS, RATING_SCORES } from "@/app/shared/constants";
 
 // --- Token generation ---

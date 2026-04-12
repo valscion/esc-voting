@@ -3,11 +3,11 @@
 import { useCallback } from "react";
 import { useActiveSong } from "./use-active-song";
 import { RatingButtons } from "./rating-buttons";
-import type { StrictSong, RatingEmoji } from "@/app/shared/constants";
+import type { Song, RatingEmoji } from "@/app/shared/constants";
 
 interface VoteSongListProps {
   gameId: string;
-  songs: readonly StrictSong[];
+  songs: readonly Song[];
   voterName: string;
   votes: Record<string, RatingEmoji>;
   assumedVotes?: Record<string, RatingEmoji>;

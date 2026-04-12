@@ -33,8 +33,12 @@ export interface Game {
   escYear: number;
 }
 
-export interface Song {
-  /** ISO 3166-1 alpha-3 country code (e.g. "MDA" for Moldova). */
+/**
+ * Loose song type used only for the `satisfies` constraint on
+ * `ESC_SONGS_BY_YEAR` (code is widened to `string` to avoid a circular
+ * reference with `CountryCode`). All other code should use `Song`.
+ */
+interface UnsafeSong {
   code: string;
   country: string;
   artist: string;
@@ -184,19 +188,30 @@ export const ESC_SONGS_BY_YEAR = {
     { code: "MLT", country: "Malta", artist: "Aidan", song: "Bella", flag: "🇲🇹", youtubeId: "YA7Ku_P59Dk", durationSec: 177, semifinal: 2, semifinalHalf: 2 },
     { code: "NOR", country: "Norway", artist: "Jonas Lovv", song: "Ya ya ya", flag: "🇳🇴", youtubeId: "MasllzWk_bQ", durationSec: 169, semifinal: 2, semifinalHalf: 2 },
   ],
-} as const satisfies Record<number, readonly Song[]>;
+} as const satisfies Record<number, readonly UnsafeSong[]>;
 
 /** Union of all 3-letter ISO country codes across all ESC years. */
 export type CountryCode =
   (typeof ESC_SONGS_BY_YEAR)[keyof typeof ESC_SONGS_BY_YEAR][number]["code"];
 
-/** Song with a narrowed `code` field typed as the `CountryCode` union. */
-export type StrictSong = Omit<Song, "code"> & { readonly code: CountryCode };
+/** Song entry with `code` narrowed to the `CountryCode` union literal. */
+export interface Song {
+  /** ISO 3166-1 alpha-3 country code (e.g. "MDA" for Moldova). */
+  readonly code: CountryCode;
+  country: string;
+  artist: string;
+  song: string;
+  flag: string;
+  youtubeId: string;
+  durationSec: number;
+  semifinal: number;
+  semifinalHalf: number;
+}
 
 /**
  * Get the list of songs for a given ESC year from the constants.
  * Returns an empty array if the year has no song data.
  */
-export function getSongsForYear(year: number): readonly StrictSong[] {
-  return (ESC_SONGS_BY_YEAR as Record<number, readonly StrictSong[]>)[year] ?? [];
+export function getSongsForYear(year: number): readonly Song[] {
+  return (ESC_SONGS_BY_YEAR as Record<number, readonly Song[]>)[year] ?? [];
 }
