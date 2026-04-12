@@ -2,6 +2,7 @@ import {
   getGameByToken,
   getVotesForVoter,
   getAssumedVotesForVoter,
+  getNotesForVoter,
   RATINGS,
   type RatingEmoji,
 } from "@/app/data";
@@ -37,7 +38,10 @@ export const VotePage = async ({
   const isClosed = !!game.closed;
 
   const songs = getSongsForYear(game.escYear);
-  const votes = await getVotesForVoter(game.id, voterName);
+  const [votes, voterNotes] = await Promise.all([
+    getVotesForVoter(game.id, voterName),
+    getNotesForVoter(game.id, voterName),
+  ]);
 
   const voteRecord: Record<string, RatingEmoji> = {};
   for (const v of votes) {
@@ -107,6 +111,7 @@ export const VotePage = async ({
         voterName={voterName}
         votes={voteRecord}
         assumedVotes={assumedVotes}
+        notes={voterNotes}
         isClosed={isClosed}
       />
 

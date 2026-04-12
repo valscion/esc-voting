@@ -7,6 +7,7 @@ import {
   deleteGame as deleteGameData,
   getGameByToken,
   upsertVote,
+  upsertNote,
   type RatingEmoji,
 } from "@/app/data";
 
@@ -44,5 +45,18 @@ export const deleteGame = serverAction(
     const game = await getGameByToken(token);
     if (!game) throw new Error("Game not found");
     await deleteGameData(game.id);
+  },
+);
+
+export const submitNote = serverAction(
+  async (
+    gameId: string,
+    voter: string,
+    country: string,
+    note: string,
+  ): Promise<void> => {
+    // Enforce tweet-sized max (280 chars)
+    const trimmed = note.slice(0, 280);
+    await upsertNote(gameId, voter, country, trimmed);
   },
 );

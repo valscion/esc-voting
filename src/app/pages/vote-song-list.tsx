@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useActiveSong } from "./use-active-song";
 import { RatingButtons } from "./rating-buttons";
+import { NoteEditor } from "./note-editor";
 import type { Song, RatingEmoji } from "@/app/shared/constants";
 
 interface VoteSongListProps {
@@ -11,6 +12,7 @@ interface VoteSongListProps {
   voterName: string;
   votes: Record<string, RatingEmoji>;
   assumedVotes?: Record<string, RatingEmoji>;
+  notes?: Record<string, string>;
   isClosed: boolean;
 }
 
@@ -20,6 +22,7 @@ export function VoteSongList({
   voterName,
   votes,
   assumedVotes = {},
+  notes = {},
   isClosed,
 }: VoteSongListProps) {
   const activeSong = useActiveSong(gameId);
@@ -163,6 +166,12 @@ export function VoteSongList({
                       (assumed rating)
                     </span>
                   )}
+                  <NoteEditor
+                    gameId={gameId}
+                    voterName={voterName}
+                    countryCode={song.code}
+                    initialNote={notes[song.code] ?? ""}
+                  />
                 </div>
               </div>
             </li>
