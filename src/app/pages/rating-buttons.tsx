@@ -2,13 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { submitVote } from "@/app/actions";
-import { RATINGS, type RatingEmoji } from "@/app/shared/constants";
+import { RATINGS, type RatingEmoji, type CountryCode } from "@/app/shared/constants";
 
 interface RatingButtonsProps {
   gameId: string;
   voterName: string;
   /** ISO 3166-1 alpha-3 code stored in votes DB. */
-  countryCode: string;
+  countryCode: CountryCode;
   /** Full country name for display/accessibility. */
   country: string;
   currentRating: RatingEmoji | undefined;

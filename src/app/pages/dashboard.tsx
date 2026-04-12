@@ -1,5 +1,5 @@
 import { getGameByToken, getResultsByScore } from "@/app/data";
-import { getSongsForYear, type CountryCode } from "@/app/shared/constants";
+import { getSongsForYear } from "@/app/shared/constants";
 import { DashboardControls } from "./dashboard-controls";
 import { GameControls } from "./game-controls";
 import { ResultsReveal } from "./results-reveal";
@@ -63,7 +63,7 @@ export const DashboardPage = async ({
       <DashboardControls
         gameId={game.id}
         songs={songs.map((s) => ({
-          code: s.code as CountryCode,
+          code: s.code,
           country: s.country,
           artist: s.artist,
           song: s.song,

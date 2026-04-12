@@ -190,10 +190,13 @@ export const ESC_SONGS_BY_YEAR = {
 export type CountryCode =
   (typeof ESC_SONGS_BY_YEAR)[keyof typeof ESC_SONGS_BY_YEAR][number]["code"];
 
+/** Song with a narrowed `code` field typed as the `CountryCode` union. */
+export type StrictSong = Omit<Song, "code"> & { readonly code: CountryCode };
+
 /**
  * Get the list of songs for a given ESC year from the constants.
  * Returns an empty array if the year has no song data.
  */
-export function getSongsForYear(year: number): readonly Song[] {
-  return (ESC_SONGS_BY_YEAR as Record<number, readonly Song[]>)[year] ?? [];
+export function getSongsForYear(year: number): readonly StrictSong[] {
+  return (ESC_SONGS_BY_YEAR as Record<number, readonly StrictSong[]>)[year] ?? [];
 }
