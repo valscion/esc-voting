@@ -34,12 +34,12 @@ export interface Game {
 }
 
 export interface Song {
-  id: string;
+  /** ISO 3166-1 alpha-3 country code (e.g. "MDA" for Moldova). */
+  code: string;
   country: string;
   artist: string;
   song: string;
   flag: string;
-  runningOrder: number;
   youtubeId: string;
   durationSec: number;
   semifinal: number;
@@ -54,6 +54,7 @@ export interface Voter {
 export interface Vote {
   id: string;
   voter: string;
+  /** ISO 3166-1 alpha-3 country code (e.g. "MDA"). */
   country: string;
   rating: RatingEmoji;
 }
@@ -120,7 +121,7 @@ export const ESC_MONTAGE_DATA: Record<number, MontageData> = {
 };
 
 /**
- * The set of ESC 2026 songs. Used as source of truth when creating a new game.
+ * Songs keyed by ESC year. Used as the source of truth for song data.
  *
  * Ordered by the official running order for each semi-final.
  * Pre-qualified (non-competing) countries are placed at their actual
@@ -138,47 +139,57 @@ export const ESC_MONTAGE_DATA: Record<number, MontageData> = {
  *         https://static.eurovisionworld.com/js/voting/181.js (SF1 running order)
  *         https://static.eurovisionworld.com/js/voting/182.js (SF2 running order)
  */
-export const ESC_SONGS = [
-  // ── Semi-final 1 · First half ──────────────────────────────
-  { country: "Moldova", artist: "Satoshi", song: "Viva, Moldova", flag: "🇲🇩", youtubeId: "k340WWX6zHk", durationSec: 174, semifinal: 1, semifinalHalf: 1 },
-  { country: "Sweden", artist: "Felicia", song: "My System", flag: "🇸🇪", youtubeId: "W7AZN_me8eA", durationSec: 182, semifinal: 1, semifinalHalf: 1 },
-  { country: "Croatia", artist: "Lelek", song: "Andromeda", flag: "🇭🇷", youtubeId: "5JXpBZgiHkY", durationSec: 179, semifinal: 1, semifinalHalf: 1 },
-  { country: "Greece", artist: "Akylas", song: "Ferto", flag: "🇬🇷", youtubeId: "VlwIKCFYQyw", durationSec: 180, semifinal: 1, semifinalHalf: 1 },
-  { country: "Portugal", artist: "Bandidos do Cante", song: "Rosa", flag: "🇵🇹", youtubeId: "8emG9PghYXg", durationSec: 179, semifinal: 1, semifinalHalf: 1 },
-  { country: "Italy", artist: "Sal Da Vinci", song: "Per sempre sì", flag: "🇮🇹", youtubeId: "kA7pS6kaTpg", durationSec: 175, semifinal: 1, semifinalHalf: 1 }, // non-competing
-  { country: "Georgia", artist: "Bzikebi", song: "On Replay", flag: "🇬🇪", youtubeId: "coh-lygCINY", durationSec: 187, semifinal: 1, semifinalHalf: 1 },
+export const ESC_SONGS_BY_YEAR: Record<number, readonly Song[]> = {
+  2026: [
+    // ── Semi-final 1 · First half ──────────────────────────────
+    { code: "MDA", country: "Moldova", artist: "Satoshi", song: "Viva, Moldova", flag: "🇲🇩", youtubeId: "k340WWX6zHk", durationSec: 174, semifinal: 1, semifinalHalf: 1 },
+    { code: "SWE", country: "Sweden", artist: "Felicia", song: "My System", flag: "🇸🇪", youtubeId: "W7AZN_me8eA", durationSec: 182, semifinal: 1, semifinalHalf: 1 },
+    { code: "HRV", country: "Croatia", artist: "Lelek", song: "Andromeda", flag: "🇭🇷", youtubeId: "5JXpBZgiHkY", durationSec: 179, semifinal: 1, semifinalHalf: 1 },
+    { code: "GRC", country: "Greece", artist: "Akylas", song: "Ferto", flag: "🇬🇷", youtubeId: "VlwIKCFYQyw", durationSec: 180, semifinal: 1, semifinalHalf: 1 },
+    { code: "PRT", country: "Portugal", artist: "Bandidos do Cante", song: "Rosa", flag: "🇵🇹", youtubeId: "8emG9PghYXg", durationSec: 179, semifinal: 1, semifinalHalf: 1 },
+    { code: "ITA", country: "Italy", artist: "Sal Da Vinci", song: "Per sempre sì", flag: "🇮🇹", youtubeId: "kA7pS6kaTpg", durationSec: 175, semifinal: 1, semifinalHalf: 1 }, // non-competing
+    { code: "GEO", country: "Georgia", artist: "Bzikebi", song: "On Replay", flag: "🇬🇪", youtubeId: "coh-lygCINY", durationSec: 187, semifinal: 1, semifinalHalf: 1 },
 
-  // ── Semi-final 1 · Second half ─────────────────────────────
-  { country: "Finland", artist: "Linda Lampenius & Pete Parkkonen", song: "Liekinheitin", flag: "🇫🇮", youtubeId: "GS91CAAddZA", durationSec: 180, semifinal: 1, semifinalHalf: 2 },
-  { country: "Montenegro", artist: "Tamara Živković", song: "Nova zora", flag: "🇲🇪", youtubeId: "6TfmkUXeKf0", durationSec: 171, semifinal: 1, semifinalHalf: 2 },
-  { country: "Germany", artist: "Sarah Engels", song: "Fire", flag: "🇩🇪", youtubeId: "8zjFGH4_Te8", durationSec: 177, semifinal: 1, semifinalHalf: 2 }, // non-competing
-  { country: "Estonia", artist: "Vanilla Ninja", song: "Too Epic To Be True", flag: "🇪🇪", youtubeId: "pf-oPWrkXFw", durationSec: 179, semifinal: 1, semifinalHalf: 2 },
-  { country: "Israel", artist: "Noam Bettan", song: "Michelle", flag: "🇮🇱", youtubeId: "j2uPlJndByI", durationSec: 180, semifinal: 1, semifinalHalf: 2 },
-  { country: "Belgium", artist: "Essyla", song: "Dancing on the Ice", flag: "🇧🇪", youtubeId: "9sfI4g6DWTU", durationSec: 180, semifinal: 1, semifinalHalf: 2 },
-  { country: "Lithuania", artist: "Lion Ceccah", song: "Sólo quiero más", flag: "🇱🇹", youtubeId: "mPZMHqSsoeo", durationSec: 182, semifinal: 1, semifinalHalf: 2 },
-  { country: "San Marino", artist: "Senhit", song: "Superstar", flag: "🇸🇲", youtubeId: "tC3eHYO38do", durationSec: 174, semifinal: 1, semifinalHalf: 2 },
-  { country: "Poland", artist: "Alicja", song: "Pray", flag: "🇵🇱", youtubeId: "bWgdnuww4eY", durationSec: 180, semifinal: 1, semifinalHalf: 2 },
-  { country: "Serbia", artist: "Lavina", song: "Kraj mene", flag: "🇷🇸", youtubeId: "931yYfZH2F8", durationSec: 181, semifinal: 1, semifinalHalf: 2 },
+    // ── Semi-final 1 · Second half ─────────────────────────────
+    { code: "FIN", country: "Finland", artist: "Linda Lampenius & Pete Parkkonen", song: "Liekinheitin", flag: "🇫🇮", youtubeId: "GS91CAAddZA", durationSec: 180, semifinal: 1, semifinalHalf: 2 },
+    { code: "MNE", country: "Montenegro", artist: "Tamara Živković", song: "Nova zora", flag: "🇲🇪", youtubeId: "6TfmkUXeKf0", durationSec: 171, semifinal: 1, semifinalHalf: 2 },
+    { code: "DEU", country: "Germany", artist: "Sarah Engels", song: "Fire", flag: "🇩🇪", youtubeId: "8zjFGH4_Te8", durationSec: 177, semifinal: 1, semifinalHalf: 2 }, // non-competing
+    { code: "EST", country: "Estonia", artist: "Vanilla Ninja", song: "Too Epic To Be True", flag: "🇪🇪", youtubeId: "pf-oPWrkXFw", durationSec: 179, semifinal: 1, semifinalHalf: 2 },
+    { code: "ISR", country: "Israel", artist: "Noam Bettan", song: "Michelle", flag: "🇮🇱", youtubeId: "j2uPlJndByI", durationSec: 180, semifinal: 1, semifinalHalf: 2 },
+    { code: "BEL", country: "Belgium", artist: "Essyla", song: "Dancing on the Ice", flag: "🇧🇪", youtubeId: "9sfI4g6DWTU", durationSec: 180, semifinal: 1, semifinalHalf: 2 },
+    { code: "LTU", country: "Lithuania", artist: "Lion Ceccah", song: "Sólo quiero más", flag: "🇱🇹", youtubeId: "mPZMHqSsoeo", durationSec: 182, semifinal: 1, semifinalHalf: 2 },
+    { code: "SMR", country: "San Marino", artist: "Senhit", song: "Superstar", flag: "🇸🇲", youtubeId: "tC3eHYO38do", durationSec: 174, semifinal: 1, semifinalHalf: 2 },
+    { code: "POL", country: "Poland", artist: "Alicja", song: "Pray", flag: "🇵🇱", youtubeId: "bWgdnuww4eY", durationSec: 180, semifinal: 1, semifinalHalf: 2 },
+    { code: "SRB", country: "Serbia", artist: "Lavina", song: "Kraj mene", flag: "🇷🇸", youtubeId: "931yYfZH2F8", durationSec: 181, semifinal: 1, semifinalHalf: 2 },
 
-  // ── Semi-final 2 · First half ──────────────────────────────
-  { country: "Bulgaria", artist: "Dara", song: "Bangaranga", flag: "🇧🇬", youtubeId: "_pkC9J6BPFY", durationSec: 177, semifinal: 2, semifinalHalf: 1 },
-  { country: "Azerbaijan", artist: "Jiva", song: "Just Go", flag: "🇦🇿", youtubeId: "iMDBPe25JhM", durationSec: 180, semifinal: 2, semifinalHalf: 1 },
-  { country: "Romania", artist: "Alexandra Căpitănescu", song: "Choke Me", flag: "🇷🇴", youtubeId: "f2byUc4L9wo", durationSec: 180, semifinal: 2, semifinalHalf: 1 },
-  { country: "Luxembourg", artist: "Eva Marija", song: "Mother Nature", flag: "🇱🇺", youtubeId: "4WA162bl1Fo", durationSec: 178, semifinal: 2, semifinalHalf: 1 },
-  { country: "France", artist: "Monroe", song: "Regarde !", flag: "🇫🇷", youtubeId: "f1RDzzLzFBs", durationSec: 177, semifinal: 2, semifinalHalf: 1 }, // non-competing
-  { country: "Czechia", artist: "Daniel Žižka", song: "Crossroads", flag: "🇨🇿", youtubeId: "6ea25aRGpLo", durationSec: 180, semifinal: 2, semifinalHalf: 1 },
-  { country: "Armenia", artist: "Simón", song: "Paloma Rumba", flag: "🇦🇲", youtubeId: "5EXoK-lgocw", durationSec: 158, semifinal: 2, semifinalHalf: 1 },
-  { country: "Austria", artist: "Cosmó", song: "Tanzschein", flag: "🇦🇹", youtubeId: "IPvJbGy5_o0", durationSec: 162, semifinal: 2, semifinalHalf: 1 }, // non-competing
-  { country: "Switzerland", artist: "Veronica Fusaro", song: "Alice", flag: "🇨🇭", youtubeId: "PfpYGAzW5dM", durationSec: 180, semifinal: 2, semifinalHalf: 1 },
+    // ── Semi-final 2 · First half ──────────────────────────────
+    { code: "BGR", country: "Bulgaria", artist: "Dara", song: "Bangaranga", flag: "🇧🇬", youtubeId: "_pkC9J6BPFY", durationSec: 177, semifinal: 2, semifinalHalf: 1 },
+    { code: "AZE", country: "Azerbaijan", artist: "Jiva", song: "Just Go", flag: "🇦🇿", youtubeId: "iMDBPe25JhM", durationSec: 180, semifinal: 2, semifinalHalf: 1 },
+    { code: "ROU", country: "Romania", artist: "Alexandra Căpitănescu", song: "Choke Me", flag: "🇷🇴", youtubeId: "f2byUc4L9wo", durationSec: 180, semifinal: 2, semifinalHalf: 1 },
+    { code: "LUX", country: "Luxembourg", artist: "Eva Marija", song: "Mother Nature", flag: "🇱🇺", youtubeId: "4WA162bl1Fo", durationSec: 178, semifinal: 2, semifinalHalf: 1 },
+    { code: "FRA", country: "France", artist: "Monroe", song: "Regarde !", flag: "🇫🇷", youtubeId: "f1RDzzLzFBs", durationSec: 177, semifinal: 2, semifinalHalf: 1 }, // non-competing
+    { code: "CZE", country: "Czechia", artist: "Daniel Žižka", song: "Crossroads", flag: "🇨🇿", youtubeId: "6ea25aRGpLo", durationSec: 180, semifinal: 2, semifinalHalf: 1 },
+    { code: "ARM", country: "Armenia", artist: "Simón", song: "Paloma Rumba", flag: "🇦🇲", youtubeId: "5EXoK-lgocw", durationSec: 158, semifinal: 2, semifinalHalf: 1 },
+    { code: "AUT", country: "Austria", artist: "Cosmó", song: "Tanzschein", flag: "🇦🇹", youtubeId: "IPvJbGy5_o0", durationSec: 162, semifinal: 2, semifinalHalf: 1 }, // non-competing
+    { code: "CHE", country: "Switzerland", artist: "Veronica Fusaro", song: "Alice", flag: "🇨🇭", youtubeId: "PfpYGAzW5dM", durationSec: 180, semifinal: 2, semifinalHalf: 1 },
 
-  // ── Semi-final 2 · Second half ─────────────────────────────
-  { country: "Cyprus", artist: "Antigoni", song: "Jalla", flag: "🇨🇾", youtubeId: "TzSs51BiQrE", durationSec: 179, semifinal: 2, semifinalHalf: 2 },
-  { country: "Latvia", artist: "Atvara", song: "Ēnā", flag: "🇱🇻", youtubeId: "ylj-kHKEFMY", durationSec: 173, semifinal: 2, semifinalHalf: 2 },
-  { country: "United Kingdom", artist: "Look Mum No Computer", song: "Eins, Zwei, Drei", flag: "🇬🇧", youtubeId: "8XR2RvfZ-68", durationSec: 190, semifinal: 2, semifinalHalf: 2 }, // non-competing
-  { country: "Denmark", artist: "Søren Torpegaard Lund", song: "Før vi går hjem", flag: "🇩🇰", youtubeId: "vKCsNbrt5yI", durationSec: 174, semifinal: 2, semifinalHalf: 2 },
-  { country: "Australia", artist: "Delta Goodrem", song: "Eclipse", flag: "🇦🇺", youtubeId: "KsFY11nOQDo", durationSec: 180, semifinal: 2, semifinalHalf: 2 },
-  { country: "Ukraine", artist: "Leléka", song: "Ridnym", flag: "🇺🇦", youtubeId: "qxEeWgjbxx0", durationSec: 178, semifinal: 2, semifinalHalf: 2 },
-  { country: "Albania", artist: "Alis", song: "Nân", flag: "🇦🇱", youtubeId: "rZuF1aDDxKE", durationSec: 189, semifinal: 2, semifinalHalf: 2 },
-  { country: "Malta", artist: "Aidan", song: "Bella", flag: "🇲🇹", youtubeId: "YA7Ku_P59Dk", durationSec: 177, semifinal: 2, semifinalHalf: 2 },
-  { country: "Norway", artist: "Jonas Lovv", song: "Ya ya ya", flag: "🇳🇴", youtubeId: "MasllzWk_bQ", durationSec: 169, semifinal: 2, semifinalHalf: 2 },
-] as const;
+    // ── Semi-final 2 · Second half ─────────────────────────────
+    { code: "CYP", country: "Cyprus", artist: "Antigoni", song: "Jalla", flag: "🇨🇾", youtubeId: "TzSs51BiQrE", durationSec: 179, semifinal: 2, semifinalHalf: 2 },
+    { code: "LVA", country: "Latvia", artist: "Atvara", song: "Ēnā", flag: "🇱🇻", youtubeId: "ylj-kHKEFMY", durationSec: 173, semifinal: 2, semifinalHalf: 2 },
+    { code: "GBR", country: "United Kingdom", artist: "Look Mum No Computer", song: "Eins, Zwei, Drei", flag: "🇬🇧", youtubeId: "8XR2RvfZ-68", durationSec: 190, semifinal: 2, semifinalHalf: 2 }, // non-competing
+    { code: "DNK", country: "Denmark", artist: "Søren Torpegaard Lund", song: "Før vi går hjem", flag: "🇩🇰", youtubeId: "vKCsNbrt5yI", durationSec: 174, semifinal: 2, semifinalHalf: 2 },
+    { code: "AUS", country: "Australia", artist: "Delta Goodrem", song: "Eclipse", flag: "🇦🇺", youtubeId: "KsFY11nOQDo", durationSec: 180, semifinal: 2, semifinalHalf: 2 },
+    { code: "UKR", country: "Ukraine", artist: "Leléka", song: "Ridnym", flag: "🇺🇦", youtubeId: "qxEeWgjbxx0", durationSec: 178, semifinal: 2, semifinalHalf: 2 },
+    { code: "ALB", country: "Albania", artist: "Alis", song: "Nân", flag: "🇦🇱", youtubeId: "rZuF1aDDxKE", durationSec: 189, semifinal: 2, semifinalHalf: 2 },
+    { code: "MLT", country: "Malta", artist: "Aidan", song: "Bella", flag: "🇲🇹", youtubeId: "YA7Ku_P59Dk", durationSec: 177, semifinal: 2, semifinalHalf: 2 },
+    { code: "NOR", country: "Norway", artist: "Jonas Lovv", song: "Ya ya ya", flag: "🇳🇴", youtubeId: "MasllzWk_bQ", durationSec: 169, semifinal: 2, semifinalHalf: 2 },
+  ],
+};
+
+/**
+ * Get the list of songs for a given ESC year from the constants.
+ * Returns an empty array if the year has no song data.
+ */
+export function getSongsForYear(year: number): readonly Song[] {
+  return ESC_SONGS_BY_YEAR[year] ?? [];
+}

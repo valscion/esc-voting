@@ -7,6 +7,9 @@ import { RATINGS, type RatingEmoji } from "@/app/shared/constants";
 interface RatingButtonsProps {
   gameId: string;
   voterName: string;
+  /** ISO 3166-1 alpha-3 code stored in votes DB. */
+  countryCode: string;
+  /** Full country name for display/accessibility. */
   country: string;
   currentRating: RatingEmoji | undefined;
   assumedRating?: RatingEmoji;
@@ -17,6 +20,7 @@ interface RatingButtonsProps {
 export function RatingButtons({
   gameId,
   voterName,
+  countryCode,
   country,
   currentRating,
   assumedRating,
@@ -32,7 +36,7 @@ export function RatingButtons({
     if (readOnly || isPending) return;
     startTransition(async () => {
       setSelected(emoji);
-      await submitVote(gameId, voterName, country, emoji);
+      await submitVote(gameId, voterName, countryCode, emoji);
     });
   };
 

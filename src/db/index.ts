@@ -4,7 +4,6 @@ import { type migrations } from "@/db/migrations";
 
 export type AppDatabase = Database<typeof migrations>;
 export type GameRow = AppDatabase["games"];
-export type SongRow = AppDatabase["songs"];
 export type VoterRow = AppDatabase["voters"];
 export type VoteRow = AppDatabase["votes"];
 

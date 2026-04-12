@@ -6,6 +6,7 @@ import { ESC_MONTAGE_DATA } from "@/app/shared/constants";
 import { MontagePlayer } from "./montage-player";
 
 interface SongInfo {
+  code: string;
   country: string;
   artist: string;
   song: string;

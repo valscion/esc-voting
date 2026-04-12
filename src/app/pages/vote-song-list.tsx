@@ -80,8 +80,8 @@ export function VoteSongList({
 
       <ul className="mt-6" onKeyDown={handleGridKeyDown}>
         {songs.map((song, idx) => {
-          const currentRating = votes[song.country];
-          const assumedRating = assumedVotes[song.country];
+          const currentRating = votes[song.code];
+          const assumedRating = assumedVotes[song.code];
           const isActive = activeSong === song.country;
           const mins = Math.floor(song.durationSec / 60);
           const secs = song.durationSec % 60;
@@ -98,7 +98,7 @@ export function VoteSongList({
 
           return (
             <li
-              key={song.id}
+              key={song.code}
               className={`relative ${
                 idx !== songs.length - 1 ? "border-b border-gray-800/60" : ""
               }`}
@@ -148,6 +148,7 @@ export function VoteSongList({
                   <RatingButtons
                     gameId={gameId}
                     voterName={voterName}
+                    countryCode={song.code}
                     country={song.country}
                     currentRating={currentRating}
                     assumedRating={assumedRating}
