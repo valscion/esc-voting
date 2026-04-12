@@ -75,7 +75,7 @@ export const migrations = {
       ];
     },
 
-    async down(db) {
+    async down(_db) {
       // Don't drop games in down — 001 already handles that
     },
   },
