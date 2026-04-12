@@ -93,7 +93,7 @@ export function VoteSongList({
                 idx !== songs.length - 1 ? "border-b border-gray-800/60 pb-4" : ""
               } ${
                 isActive
-                  ? "z-0 before:content-[''] before:absolute before:-inset-0.5 before:-z-10 before:rounded-2xl before:bg-linear-to-br before:from-indigo-500/35 before:via-purple-500/25 before:to-indigo-500/15 before:animate-(--animate-active-song-pulse)"
+                  ? "z-0 before:content-[''] before:absolute before:-inset-y-0.5 before:left-[calc(-50vw+50%)] before:w-screen before:-z-10 before:bg-linear-to-br before:from-indigo-500/35 before:via-purple-500/25 before:to-indigo-500/15 before:animate-(--animate-active-song-pulse)"
                   : ""
               }`}
             >
