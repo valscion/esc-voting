@@ -595,4 +595,218 @@ test.describe("ESC Voting App", () => {
       await context.close();
     });
   });
+
+  test.describe("TV Display", () => {
+    test("shows standby screen when no song is active", async ({ page }) => {
+      const token = await createGame(page);
+
+      await gotoAndHydrate(page, `/${token}/tv`);
+
+      // Should show the standby screen
+      await expect(page.locator("body")).toContainText("TV Display");
+      await expect(page.locator("body")).toContainText(
+        "Waiting for the next song",
+      );
+    });
+
+    test("shows 'Game not found' for invalid token", async ({ page }) => {
+      await page.goto("/nonexistent-game-99/tv");
+
+      await expect(page.locator("body")).toContainText("Game not found");
+    });
+
+    test("dashboard has TV Display link", async ({ page }) => {
+      const token = await createGame(page);
+
+      await gotoAndHydrate(page, `/${token}/dashboard`);
+
+      // Should have the TV Display link
+      const tvLink = page.locator(`a[href="/${token}/tv"]`);
+      await expect(tvLink).toBeVisible();
+      await expect(tvLink).toContainText("Open TV Display");
+    });
+
+    test("dashboard song controls show play/pause, skip, and stop buttons", async ({
+      page,
+    }) => {
+      const token = await createGame(page);
+
+      await gotoAndHydrate(page, `/${token}/dashboard`);
+
+      // Initially no playback controls visible
+      await expect(page.locator("body")).toContainText(
+        "No song currently playing",
+      );
+
+      // Click the first song to activate it
+      const firstSong = page.locator("button[data-song-country]").first();
+      await firstSong.click();
+      await expect(firstSong).toHaveAttribute("aria-pressed", "true");
+
+      // Should show "Now playing" bar with playback controls
+      await expect(page.locator("body")).toContainText("Now playing:");
+      await expect(page.getByText("⏸ Pause")).toBeVisible();
+      await expect(page.getByText("⏭ Skip")).toBeVisible();
+      await expect(page.getByText("⏹ Stop")).toBeVisible();
+
+      // Click pause — should toggle to Play
+      await page.getByText("⏸ Pause").click();
+      await expect(
+        page.getByRole("button", { name: "▶️ Play", exact: true }),
+      ).toBeVisible();
+
+      // Click play again — should toggle back to Pause
+      await page.getByRole("button", { name: "▶️ Play", exact: true }).click();
+      await expect(page.getByText("⏸ Pause")).toBeVisible();
+    });
+
+    test("dashboard skip advances to next song", async ({ page }) => {
+      const token = await createGame(page);
+
+      await gotoAndHydrate(page, `/${token}/dashboard`);
+
+      // Activate the first song
+      const firstSong = page.locator("button[data-song-country]").first();
+      const firstCountry = await firstSong.getAttribute("data-song-country");
+      await firstSong.click();
+      await expect(firstSong).toHaveAttribute("aria-pressed", "true");
+
+      // Click skip
+      await page.getByText("⏭ Skip").click();
+
+      // First song should no longer be pressed
+      await expect(firstSong).toHaveAttribute("aria-pressed", "false");
+
+      // Second song should now be active
+      const secondSong = page.locator("button[data-song-country]").nth(1);
+      const secondCountry = await secondSong.getAttribute("data-song-country");
+      await expect(secondSong).toHaveAttribute("aria-pressed", "true");
+
+      // Now playing bar should show the second song
+      await expect(page.locator("body")).toContainText(secondCountry!);
+
+      // Verify it's a different country
+      expect(secondCountry).not.toBe(firstCountry);
+    });
+
+    test("dashboard stop clears active song", async ({ page }) => {
+      const token = await createGame(page);
+
+      await gotoAndHydrate(page, `/${token}/dashboard`);
+
+      // Activate a song
+      const firstSong = page.locator("button[data-song-country]").first();
+      await firstSong.click();
+      await expect(firstSong).toHaveAttribute("aria-pressed", "true");
+
+      // Click stop
+      await page.getByText("⏹ Stop").click();
+
+      // Song should be deactivated
+      await expect(firstSong).toHaveAttribute("aria-pressed", "false");
+
+      // Should show "No song currently playing"
+      await expect(page.locator("body")).toContainText(
+        "No song currently playing",
+      );
+    });
+
+    test("dashboard montage toggle shows montage playing state", async ({
+      page,
+    }) => {
+      const token = await createGame(page);
+
+      await gotoAndHydrate(page, `/${token}/dashboard`);
+
+      // Should show the "Play Montage" button
+      const montageButton = page.getByText("▶️ Play Montage");
+      await expect(montageButton).toBeVisible();
+
+      // Click to start montage
+      await montageButton.click();
+
+      // Should show "Stop Montage" and "Montage playing" state
+      await expect(page.getByText("⏹ Stop Montage")).toBeVisible();
+      await expect(page.locator("body")).toContainText("Montage playing");
+
+      // Click stop montage
+      await page.getByText("⏹ Stop Montage").click();
+
+      // Should return to initial state
+      await expect(page.getByText("▶️ Play Montage")).toBeVisible();
+      await expect(page.locator("body")).toContainText(
+        "No song currently playing",
+      );
+    });
+
+    test("dashboard song selection syncs to TV display via useSyncedState", async ({
+      browser,
+    }) => {
+      const context = await browser.newContext();
+      const dashboardPage = await context.newPage();
+      const tvPage = await context.newPage();
+
+      // Create a game
+      const token = await createGame(dashboardPage);
+
+      // Open both pages
+      await gotoAndHydrate(dashboardPage, `/${token}/dashboard`);
+      await gotoAndHydrate(tvPage, `/${token}/tv`);
+
+      // TV should initially show standby
+      await expect(tvPage.locator("body")).toContainText(
+        "Waiting for the next song",
+      );
+
+      // Click a song on the dashboard
+      const firstSongButton = dashboardPage
+        .locator("button[data-song-country]")
+        .first();
+      const country = await firstSongButton.getAttribute("data-song-country");
+      await firstSongButton.click();
+      await expect(firstSongButton).toHaveAttribute("aria-pressed", "true");
+
+      // TV should now show the video player (no longer on standby)
+      await expect(
+        tvPage.locator("body").getByText("Waiting for the next song"),
+      ).not.toBeVisible({ timeout: 10000 });
+
+      // Stop the song from dashboard
+      await dashboardPage.getByText("⏹ Stop").click();
+      await expect(firstSongButton).toHaveAttribute("aria-pressed", "false");
+
+      // TV should go back to standby
+      await expect(tvPage.locator("body")).toContainText(
+        "Waiting for the next song",
+        { timeout: 10000 },
+      );
+
+      await context.close();
+    });
+
+    test("dashboard shows song duration in song buttons", async ({ page }) => {
+      const token = await createGame(page);
+
+      await gotoAndHydrate(page, `/${token}/dashboard`);
+
+      // Song buttons should show duration in format like "(2:54)"
+      const firstSongButton = page
+        .locator("button[data-song-country]")
+        .first();
+      const text = await firstSongButton.textContent();
+
+      // Duration should match pattern like (N:NN) e.g. (2:54)
+      expect(text).toMatch(/\(\d+:\d{2}\)/);
+    });
+
+    test("dashboard groups songs by semifinal halves", async ({ page }) => {
+      const token = await createGame(page);
+
+      await gotoAndHydrate(page, `/${token}/dashboard`);
+
+      // Should show semifinal group headers
+      await expect(page.locator("body")).toContainText("Semi-final 1");
+      await expect(page.locator("body")).toContainText("First half");
+    });
+  });
 });
