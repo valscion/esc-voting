@@ -7,7 +7,7 @@ import type { Song, RatingEmoji } from "@/app/shared/constants";
 
 interface VoteSongListProps {
   gameId: string;
-  songs: Song[];
+  songs: readonly Song[];
   voterName: string;
   votes: Record<string, RatingEmoji>;
   assumedVotes?: Record<string, RatingEmoji>;
