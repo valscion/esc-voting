@@ -35,13 +35,18 @@ export const DashboardPage = async ({
     getAllVotes(game.id),
   ]);
   const totalSongs = songs.length;
+
+  // Build a map of voter name → vote count for efficient lookup
+  const voteCountByVoter = new Map<string, number>();
+  for (const v of votes) {
+    voteCountByVoter.set(v.voter, (voteCountByVoter.get(v.voter) ?? 0) + 1);
+  }
   const hideDeleteButton =
     voters.length >= 4 &&
     totalSongs > 0 &&
-    voters.every((voter) => {
-      const voterVoteCount = votes.filter((v) => v.voter === voter.name).length;
-      return voterVoteCount >= totalSongs;
-    });
+    voters.every(
+      (voter) => (voteCountByVoter.get(voter.name) ?? 0) >= totalSongs,
+    );
 
   if (game.closed) {
     const results = await getResultsByScore(game.id, game.escYear);
