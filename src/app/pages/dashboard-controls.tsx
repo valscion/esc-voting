@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSyncedState } from "rwsdk/use-synced-state/client";
+import { useSyncedState } from "./use-reconnecting-synced-state";
 import { ESC_MONTAGE_DATA, type CountryCode } from "@/app/shared/constants";
 
 interface SongInfo {

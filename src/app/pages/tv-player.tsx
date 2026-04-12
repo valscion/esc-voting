@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import ReactPlayer from "react-player";
-import { useSyncedState } from "rwsdk/use-synced-state/client";
+import { useSyncedState } from "./use-reconnecting-synced-state";
 
 interface TVSongInfo {
   country: string;
