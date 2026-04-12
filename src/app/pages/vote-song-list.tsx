@@ -147,7 +147,7 @@ export function VoteSongList({
                     )}
                   </div>
                 </div>
-                <div>
+                <div className="flex flex-col items-end">
                   <RatingButtons
                     gameId={gameId}
                     voterName={voterName}

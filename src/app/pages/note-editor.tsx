@@ -40,7 +40,7 @@ export function NoteEditor({
 
   if (isEditing) {
     return (
-      <div className="mt-1.5 flex flex-col gap-1.5">
+      <div className="mt-1.5 flex flex-col gap-1.5 self-stretch">
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -78,7 +78,7 @@ export function NoteEditor({
   }
 
   return (
-    <div className="mt-1 flex flex-col items-end">
+    <div className="mt-1 flex flex-col items-end self-stretch">
       {savedNote && (
         <p className="mb-0.5 w-full text-xs text-gray-500 italic">
           {savedNote}
