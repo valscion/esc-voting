@@ -1,5 +1,6 @@
 import { getGameByToken } from "@/app/data";
 import { ESC_MONTAGE_DATA, getSongsForYear } from "@/app/shared/constants";
+import { TVErrorBoundary } from "./tv-error-boundary";
 import { TVPlayer } from "./tv-player";
 
 export const TVDisplayPage = async ({
@@ -22,17 +23,19 @@ export const TVDisplayPage = async ({
   const montageData = ESC_MONTAGE_DATA[game.escYear];
 
   return (
-    <TVPlayer
-      gameId={game.id}
-      songs={songs.map((s) => ({
-        country: s.country,
-        youtubeId: s.youtubeId,
-        flag: s.flag,
-        artist: s.artist,
-        song: s.song,
-      }))}
-      montageYoutubeId={montageData?.youtubeId ?? ""}
-      montageTimestamps={montageData?.timestamps ?? []}
-    />
+    <TVErrorBoundary>
+      <TVPlayer
+        gameId={game.id}
+        songs={songs.map((s) => ({
+          country: s.country,
+          youtubeId: s.youtubeId,
+          flag: s.flag,
+          artist: s.artist,
+          song: s.song,
+        }))}
+        montageYoutubeId={montageData?.youtubeId ?? ""}
+        montageTimestamps={montageData?.timestamps ?? []}
+      />
+    </TVErrorBoundary>
   );
 };

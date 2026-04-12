@@ -49,9 +49,14 @@ function getCountryAtTime(
   return result;
 }
 
+/** How long (ms) a video can stall before we auto-reload the page. */
+const STALL_TIMEOUT_MS = 15_000;
+
 export function TVPlayer({ gameId, songs, montageYoutubeId, montageTimestamps }: TVPlayerProps) {
   const playerRef = useRef<HTMLVideoElement | null>(null);
   const lastMontageCountryRef = useRef<string | null>(null);
+  const lastProgressTimeRef = useRef<number>(0);
+  const stallTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Synced state — read
   const [activeSong, setActiveSong] = useSyncedState<string | null>(
@@ -175,6 +180,10 @@ export function TVPlayer({ gameId, songs, montageYoutubeId, montageTimestamps }:
   const handleTimeUpdate = useCallback(() => {
     const el = playerRef.current;
     if (!el || !el.duration) return;
+
+    // Reset stall detection — we received a real progress update
+    lastProgressTimeRef.current = Date.now();
+
     setTvProgress({
       playedFraction: el.currentTime / el.duration,
       playedSeconds: el.currentTime,
@@ -193,6 +202,49 @@ export function TVPlayer({ gameId, songs, montageYoutubeId, montageTimestamps }:
       }
     }
   }, [setTvProgress, isMontageMode, montageTimestamps, setActiveSong]);
+
+  // --- Video error & stall detection ---
+  // If the video is supposed to be playing but makes no time progress for
+  // STALL_TIMEOUT_MS, reload the page automatically. Also reload on
+  // unrecoverable video errors.
+
+  useEffect(() => {
+    // Only run stall detection when a video is actively playing
+    if (!playing || !videoUrl) {
+      if (stallTimerRef.current) {
+        clearInterval(stallTimerRef.current);
+        stallTimerRef.current = null;
+      }
+      return;
+    }
+
+    lastProgressTimeRef.current = Date.now();
+
+    stallTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - lastProgressTimeRef.current;
+      if (elapsed > STALL_TIMEOUT_MS) {
+        console.error(
+          `[TVPlayer] Video stalled for ${Math.round(elapsed / 1000)}s — reloading page`,
+        );
+        window.location.reload();
+      }
+    }, 5000);
+
+    return () => {
+      if (stallTimerRef.current) {
+        clearInterval(stallTimerRef.current);
+        stallTimerRef.current = null;
+      }
+    };
+  }, [playing, videoUrl]);
+
+  const handleError = useCallback(
+    (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      console.error("[TVPlayer] Video error — reloading page in 3s", e);
+      setTimeout(() => window.location.reload(), 3000);
+    },
+    [],
+  );
 
   // Handle video end
   const handleEnded = useCallback(() => {
@@ -242,6 +294,7 @@ export function TVPlayer({ gameId, songs, montageYoutubeId, montageTimestamps }:
         height="100%"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
+        onError={handleError}
         config={{
           youtube: {
             referrerpolicy: "strict-origin-when-cross-origin",
