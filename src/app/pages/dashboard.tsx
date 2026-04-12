@@ -1,8 +1,9 @@
-import { getGameByToken, getResultsByScore } from "@/app/data";
+import { getGameByToken, getResultsByScore, getResultsExportData } from "@/app/data";
 import { getSongsForYear } from "@/app/shared/constants";
 import { DashboardControls } from "./dashboard-controls";
 import { GameControls } from "./game-controls";
 import { ResultsReveal } from "./results-reveal";
+import { ResultsExportButtons } from "./export-buttons";
 
 export const DashboardPage = async ({
   params,
@@ -30,11 +31,17 @@ export const DashboardPage = async ({
   }
 
   if (game.closed) {
-    const results = await getResultsByScore(game.id, game.escYear);
+    const [results, resultsExportData] = await Promise.all([
+      getResultsByScore(game.id, game.escYear),
+      getResultsExportData(game.id, game.escYear),
+    ]);
     return (
       <main>
         <ResultsReveal token={token} results={results} />
         <div className="mx-auto max-w-4xl px-6 pb-10">
+          <div className="mb-4">
+            <ResultsExportButtons data={resultsExportData} />
+          </div>
           <GameControls token={token} closed={true} />
         </div>
       </main>

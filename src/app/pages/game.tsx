@@ -2,8 +2,10 @@ import {
   getGameByToken,
   getVoters,
   getAllVotes,
+  getResultsExportData,
 } from "@/app/data";
 import { getSongsForYear } from "@/app/shared/constants";
+import { ResultsExportButtons } from "./export-buttons";
 
 export const GamePage = async ({
   params,
@@ -31,9 +33,10 @@ export const GamePage = async ({
   }
 
   const songs = getSongsForYear(game.escYear);
-  const [voters, votes] = await Promise.all([
+  const [voters, votes, resultsExportData] = await Promise.all([
     getVoters(game.id),
     getAllVotes(game.id),
+    getResultsExportData(game.id, game.escYear),
   ]);
 
   const totalSongs = songs.length;
@@ -86,13 +89,14 @@ export const GamePage = async ({
         })}
       </ul>
 
-      <div className="mt-10 border-t border-gray-800 pt-6">
+      <div className="mt-10 border-t border-gray-800 pt-6 flex flex-wrap gap-3">
         <a
           href={`/${token}/dashboard`}
           className="inline-flex items-center gap-2 rounded-2xl border border-indigo-700 bg-indigo-950/40 px-5 py-2.5 text-sm font-medium text-indigo-300 no-underline transition-all hover:bg-indigo-950/70"
         >
           📺 Open dashboard
         </a>
+        <ResultsExportButtons data={resultsExportData} />
       </div>
     </main>
   );

@@ -3,11 +3,13 @@ import {
   getVotesForVoter,
   getAssumedVotesForVoter,
   getNotesForVoter,
+  getVoterExportData,
   RATINGS,
   type RatingEmoji,
 } from "@/app/data";
 import { getSongsForYear } from "@/app/shared/constants";
 import { VoteSongList } from "./vote-song-list";
+import { VoterExportButtons } from "./export-buttons";
 import { RatingHistogram } from "./rating-histogram";
 
 export const VotePage = async ({
@@ -39,9 +41,10 @@ export const VotePage = async ({
   const isClosed = !!game.closed;
 
   const songs = getSongsForYear(game.escYear);
-  const [votes, voterNotes] = await Promise.all([
+  const [votes, voterNotes, voterExportData] = await Promise.all([
     getVotesForVoter(game.id, voterName),
     getNotesForVoter(game.id, voterName),
+    getVoterExportData(game.id, voterName, game.escYear),
   ]);
 
   const voteRecord: Record<string, RatingEmoji> = {};
@@ -105,6 +108,10 @@ export const VotePage = async ({
           🔒 Voting is closed – results are read-only.
         </div>
       )}
+
+      <div className="mt-4">
+        <VoterExportButtons data={voterExportData} />
+      </div>
 
       <VoteSongList
         gameId={game.id}

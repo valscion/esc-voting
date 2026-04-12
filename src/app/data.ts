@@ -15,6 +15,12 @@ import { db } from "@/db";
 import type { Game, Song, Voter, Vote, RatingEmoji } from "@/app/shared/constants";
 import { getSongsForYear, DEFAULT_ESC_YEAR, RATING_SCORES } from "@/app/shared/constants";
 import { computeMedianScore, scoreToEmoji } from "@/app/shared/scoring";
+import type {
+  VoterExportData,
+  VoterExportRow,
+  ResultsExportData,
+  ResultsExportRow,
+} from "@/app/shared/export";
 
 export type { Game, Song, Voter, Vote, RatingEmoji };
 export { RATINGS, RATING_SCORES } from "@/app/shared/constants";
@@ -423,4 +429,278 @@ export async function getResultsByScore(
     .map(([score, songs]) => ({ score, songs }));
 
   return groups;
+}
+
+// ── Export data gathering ─────────────────────────────────────
+
+/**
+ * Gather all data needed to export a single voter's votes.
+ * Always computes assumed scores for unrated songs (median of other voters).
+ */
+export async function getVoterExportData(
+  gameId: string,
+  voterName: string,
+  escYear: number,
+): Promise<VoterExportData> {
+  const songs = getSongsForYear(escYear);
+  const [votes, allVotes, voterNotes] = await Promise.all([
+    getVotesForVoter(gameId, voterName),
+    getAllVotes(gameId),
+    getNotesForVoter(gameId, voterName),
+  ]);
+
+  const voteMap = new Map(votes.map((v) => [v.country, v]));
+
+  // Build per-country vote lists for median computation
+  const votesByCode = new Map<string, Vote[]>();
+  for (const v of allVotes) {
+    const list = votesByCode.get(v.country) ?? [];
+    list.push(v);
+    votesByCode.set(v.country, list);
+  }
+
+  const exportSongs: VoterExportRow[] = songs.map((song) => {
+    const vote = voteMap.get(song.code);
+    let voteEmoji: string;
+    let score: number;
+    let assumed = false;
+
+    if (vote) {
+      voteEmoji = vote.rating;
+      score = RATING_SCORES[vote.rating] ?? 0;
+    } else {
+      // Compute assumed score from median of other votes
+      const songVotes = votesByCode.get(song.code) ?? [];
+      if (songVotes.length > 0) {
+        const scores = songVotes.map((v) => RATING_SCORES[v.rating] ?? 0);
+        const medianScore = computeMedianScore(scores);
+        const assumedEmoji = scoreToEmoji(medianScore);
+        voteEmoji = assumedEmoji;
+        score = RATING_SCORES[assumedEmoji];
+        assumed = true;
+      } else {
+        voteEmoji = "";
+        score = 0;
+        assumed = true;
+      }
+    }
+
+    return {
+      countryCode: song.code,
+      country: song.country,
+      song: song.song,
+      artist: song.artist,
+      flag: song.flag,
+      voteEmoji,
+      score,
+      assumed,
+      note: voterNotes[song.code] ?? "",
+    };
+  });
+
+  return {
+    escYear,
+    gameId,
+    voter: voterName,
+    exportedAt: new Date().toISOString(),
+    songs: exportSongs,
+  };
+}
+
+/**
+ * Gather all data needed to export the full results for a game.
+ * Always computes assumed scores for unrated songs (median of other voters).
+ */
+export async function getResultsExportData(
+  gameId: string,
+  escYear: number,
+): Promise<ResultsExportData> {
+  const songs = getSongsForYear(escYear);
+  const [votes, voters, allNotes] = await Promise.all([
+    getAllVotes(gameId),
+    getVoters(gameId),
+    getAllNotes(gameId),
+  ]);
+
+  const voterNames = voters.map((v) => v.name);
+
+  // Build per-country vote lists
+  const votesByCode = new Map<string, Vote[]>();
+  for (const v of votes) {
+    const list = votesByCode.get(v.country) ?? [];
+    list.push(v);
+    votesByCode.set(v.country, list);
+  }
+
+  // Build per-country notes
+  const notesByCode = new Map<string, { voter: string; note: string }[]>();
+  for (const n of allNotes) {
+    const list = notesByCode.get(n.country) ?? [];
+    list.push({ voter: n.voter, note: n.note });
+    notesByCode.set(n.country, list);
+  }
+
+  const exportSongs: ResultsExportRow[] = songs.map((song) => {
+    const songVotes = votesByCode.get(song.code) ?? [];
+    const actualBreakdown = songVotes.map((v) => ({
+      voter: v.voter,
+      emoji: v.rating,
+      score: RATING_SCORES[v.rating] ?? 0,
+      assumed: false,
+    }));
+
+    const votedVoters = new Set(songVotes.map((v) => v.voter));
+    const missingVoters = voterNames.filter((name) => !votedVoters.has(name));
+
+    const assumedBreakdown: typeof actualBreakdown = [];
+    if (missingVoters.length > 0 && actualBreakdown.length > 0) {
+      const actualScores = actualBreakdown.map((b) => b.score);
+      const medianScore = computeMedianScore(actualScores);
+      const assumedEmoji = scoreToEmoji(medianScore);
+      const assumedScore = RATING_SCORES[assumedEmoji];
+
+      for (const voter of missingVoters) {
+        assumedBreakdown.push({
+          voter,
+          emoji: assumedEmoji,
+          score: assumedScore,
+          assumed: true,
+        });
+      }
+    }
+
+    const allBreakdown = [...actualBreakdown, ...assumedBreakdown];
+    const totalScore = allBreakdown.reduce((sum, b) => sum + b.score, 0);
+
+    return {
+      countryCode: song.code,
+      country: song.country,
+      song: song.song,
+      artist: song.artist,
+      flag: song.flag,
+      totalScore,
+      votes: allBreakdown,
+      notes: notesByCode.get(song.code) ?? [],
+    };
+  });
+
+  return {
+    escYear,
+    gameId,
+    voters: voterNames,
+    exportedAt: new Date().toISOString(),
+    songs: exportSongs,
+  };
+}
+
+// ── Import ────────────────────────────────────────────────────
+
+/**
+ * JSON shape accepted by the import function. Matches the results export
+ * format so users can round-trip their data.
+ */
+export interface GameImportData {
+  escYear: number;
+  voters: string[];
+  songs?: {
+    countryCode: string;
+    votes?: { voter: string; emoji: string }[];
+    notes?: { voter: string; note: string }[];
+  }[];
+}
+
+/**
+ * Import a game from previously exported JSON data.
+ *
+ * @param importData - Parsed and validated import payload
+ * @param includeRatings - Whether to also import votes and notes
+ * @returns The created Game object
+ */
+export async function importGame(
+  importData: GameImportData,
+  includeRatings: boolean,
+): Promise<Game> {
+  const escYear = importData.escYear ?? DEFAULT_ESC_YEAR;
+  const songs = getSongsForYear(escYear);
+  if (songs.length === 0) {
+    throw new Error(`No song data available for ESC year ${escYear}`);
+  }
+
+  const voterNames = importData.voters;
+  if (!voterNames || voterNames.length < 1) {
+    throw new Error("Import must include at least one voter");
+  }
+
+  // Validate voter names are unique
+  const uniqueVoters = [...new Set(voterNames)];
+  if (uniqueVoters.length !== voterNames.length) {
+    throw new Error("Voter names must be unique");
+  }
+
+  // Create the game
+  const gameId = crypto.randomUUID();
+  const token = await generateUniqueToken();
+  const now = new Date().toISOString();
+
+  await db
+    .insertInto("games")
+    .values({ id: gameId, token, closed: 0, created_at: now, escYear })
+    .execute();
+
+  // Insert voters
+  for (const name of voterNames) {
+    await db
+      .insertInto("voters")
+      .values({ id: crypto.randomUUID(), game_id: gameId, name })
+      .execute();
+  }
+
+  // Import ratings if requested
+  if (includeRatings && importData.songs) {
+    const validCodes = new Set<string>(songs.map((s) => s.code));
+    const validEmojis = new Set(Object.keys(RATING_SCORES));
+    const voterSet = new Set(voterNames);
+
+    for (const songData of importData.songs) {
+      if (!validCodes.has(songData.countryCode)) continue;
+
+      // Import votes
+      if (songData.votes) {
+        for (const vote of songData.votes) {
+          if (!voterSet.has(vote.voter)) continue;
+          if (!validEmojis.has(vote.emoji)) continue;
+          await db
+            .insertInto("votes")
+            .values({
+              id: crypto.randomUUID(),
+              game_id: gameId,
+              voterName: vote.voter,
+              country: songData.countryCode,
+              rating: vote.emoji,
+            })
+            .execute();
+        }
+      }
+
+      // Import notes
+      if (songData.notes) {
+        for (const note of songData.notes) {
+          if (!voterSet.has(note.voter)) continue;
+          if (!note.note) continue;
+          await db
+            .insertInto("notes")
+            .values({
+              id: crypto.randomUUID(),
+              game_id: gameId,
+              voterName: note.voter,
+              country: songData.countryCode,
+              note: note.note.slice(0, 280),
+            })
+            .execute();
+        }
+      }
+    }
+  }
+
+  return { id: gameId, token, closed: 0, created_at: now, escYear };
 }
