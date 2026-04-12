@@ -6,5 +6,6 @@ export type AppDatabase = Database<typeof migrations>;
 export type GameRow = AppDatabase["games"];
 export type VoterRow = AppDatabase["voters"];
 export type VoteRow = AppDatabase["votes"];
+export type NoteRow = AppDatabase["notes"];
 
 export const db = createDb<AppDatabase>(env.DATABASE, "esc-voting-db");

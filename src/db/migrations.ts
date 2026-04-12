@@ -75,7 +75,7 @@ export const migrations = {
       ];
     },
 
-    async down(db) {
+    async down(_db) {
       // Don't drop games in down — 001 already handles that
     },
   },
@@ -183,6 +183,30 @@ export const migrations = {
           col.notNull().defaultTo(1),
         )
         .execute();
+    },
+  },
+  "007_add_notes_table": {
+    async up(db) {
+      return [
+        await db.schema
+          .createTable("notes")
+          .ifNotExists()
+          .addColumn("id", "text", (col) => col.primaryKey())
+          .addColumn("game_id", "text", (col) => col.notNull())
+          .addColumn("voterName", "text", (col) => col.notNull())
+          .addColumn("country", "text", (col) => col.notNull())
+          .addColumn("note", "text", (col) => col.notNull().defaultTo(""))
+          .addUniqueConstraint("notes_game_voter_country_unique", [
+            "game_id",
+            "voterName",
+            "country",
+          ])
+          .execute(),
+      ];
+    },
+
+    async down(db) {
+      await db.schema.dropTable("notes").ifExists().execute();
     },
   },
 } satisfies Migrations;

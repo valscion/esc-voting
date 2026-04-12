@@ -105,6 +105,7 @@ export async function closeGame(gameId: string): Promise<void> {
 }
 
 export async function deleteGame(gameId: string): Promise<void> {
+  await db.deleteFrom("notes").where("game_id", "=", gameId).execute();
   await db.deleteFrom("votes").where("game_id", "=", gameId).execute();
   await db.deleteFrom("voters").where("game_id", "=", gameId).execute();
   await db.deleteFrom("games").where("id", "=", gameId).execute();
@@ -191,6 +192,83 @@ export async function getAllVotes(gameId: string): Promise<Vote[]> {
   }));
 }
 
+// --- Notes ---
+
+export interface NoteEntry {
+  voter: string;
+  country: string;
+  note: string;
+}
+
+export async function getNotesForVoter(
+  gameId: string,
+  voterName: string,
+): Promise<Record<string, string>> {
+  const rows = await db
+    .selectFrom("notes")
+    .selectAll()
+    .where("game_id", "=", gameId)
+    .where("voterName", "=", voterName)
+    .execute();
+
+  const record: Record<string, string> = {};
+  for (const r of rows) {
+    if (r.note) {
+      record[r.country] = r.note;
+    }
+  }
+  return record;
+}
+
+export async function upsertNote(
+  gameId: string,
+  voter: string,
+  country: string,
+  note: string,
+): Promise<void> {
+  const existing = await db
+    .selectFrom("notes")
+    .selectAll()
+    .where("game_id", "=", gameId)
+    .where("voterName", "=", voter)
+    .where("country", "=", country)
+    .executeTakeFirst();
+
+  if (existing) {
+    await db
+      .updateTable("notes")
+      .set({ note })
+      .where("id", "=", existing.id)
+      .execute();
+  } else {
+    await db
+      .insertInto("notes")
+      .values({
+        id: crypto.randomUUID(),
+        game_id: gameId,
+        voterName: voter,
+        country,
+        note,
+      })
+      .execute();
+  }
+}
+
+export async function getAllNotes(gameId: string): Promise<NoteEntry[]> {
+  const rows = await db
+    .selectFrom("notes")
+    .selectAll()
+    .where("game_id", "=", gameId)
+    .execute();
+  return rows
+    .filter((r) => r.note)
+    .map((r) => ({
+      voter: r.voterName,
+      country: r.country,
+      note: r.note,
+    }));
+}
+
 // --- Results ---
 
 export interface SongResult {
@@ -200,6 +278,7 @@ export interface SongResult {
   flag: string;
   totalScore: number;
   voteBreakdown: { voter: string; emoji: RatingEmoji; score: number; assumed: boolean }[];
+  notes: { voter: string; note: string }[];
 }
 
 /**
@@ -260,9 +339,10 @@ export async function getResultsByScore(
   escYear: number,
 ): Promise<{ score: number; songs: SongResult[] }[]> {
   const songs = getSongsForYear(escYear);
-  const [votes, voters] = await Promise.all([
+  const [votes, voters, allNotes] = await Promise.all([
     getAllVotes(gameId),
     getVoters(gameId),
+    getAllNotes(gameId),
   ]);
 
   const voterNames = voters.map((v) => v.name);
@@ -273,6 +353,14 @@ export async function getResultsByScore(
     const list = votesByCode.get(v.country) ?? [];
     list.push(v);
     votesByCode.set(v.country, list);
+  }
+
+  // Build a map of country code → notes
+  const notesByCode = new Map<string, { voter: string; note: string }[]>();
+  for (const n of allNotes) {
+    const list = notesByCode.get(n.country) ?? [];
+    list.push({ voter: n.voter, note: n.note });
+    notesByCode.set(n.country, list);
   }
 
   // Calculate score for each song
@@ -317,6 +405,7 @@ export async function getResultsByScore(
       flag: song.flag,
       totalScore,
       voteBreakdown: allBreakdown,
+      notes: notesByCode.get(song.code) ?? [],
     };
   });
 
