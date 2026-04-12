@@ -82,6 +82,8 @@ export async function createGame(
     semifinal: s.semifinal,
     semifinalHalf: s.semifinalHalf,
   }));
+  // Insert songs from the constant set, in batches of 5 to stay under
+  // Cloudflare Workers SQLite bound-variable limit (12 columns × 5 = 60 vars).
   for (let i = 0; i < songValues.length; i += 5) {
     await db
       .insertInto("songs")
