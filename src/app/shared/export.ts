@@ -127,7 +127,7 @@ export function formatVoterMarkdown(data: VoterExportData): string {
 
   for (const s of data.songs) {
     const scoreStr = s.assumed ? `${s.score}*` : String(s.score);
-    const noteStr = s.note ? s.note.replace(/\|/g, "\\|") : "";
+    const noteStr = s.note ? s.note.replace(/\\/g, "\\\\").replace(/\|/g, "\\|") : "";
     lines.push(
       `| ${s.flag} | ${s.country} | ${s.artist} | ${s.song} | ${s.voteEmoji} | ${scoreStr} | ${noteStr} |`,
     );
