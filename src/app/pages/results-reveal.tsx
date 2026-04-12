@@ -148,6 +148,30 @@ export function ResultsReveal({ token, results }: ResultsRevealProps) {
                     )}
                   </div>
                 )}
+
+                {/* Things said about this song */}
+                {song.notes.length > 0 && (
+                  <div className="mt-3 border-t border-gray-700/50 pt-3">
+                    <div className="mb-1.5 text-xs font-medium text-gray-500">
+                      💬 Things said about this song:
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {song.notes.map((n) => (
+                        <div
+                          key={n.voter}
+                          className="rounded-lg bg-gray-800/50 px-3 py-2 text-sm"
+                        >
+                          <span className="font-medium text-indigo-400">
+                            {n.voter}:
+                          </span>{" "}
+                          <span className="text-gray-300 italic">
+                            &ldquo;{n.note}&rdquo;
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

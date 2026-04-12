@@ -185,4 +185,28 @@ export const migrations = {
         .execute();
     },
   },
+  "007_add_notes_table": {
+    async up(db) {
+      return [
+        await db.schema
+          .createTable("notes")
+          .ifNotExists()
+          .addColumn("id", "text", (col) => col.primaryKey())
+          .addColumn("game_id", "text", (col) => col.notNull())
+          .addColumn("voterName", "text", (col) => col.notNull())
+          .addColumn("country", "text", (col) => col.notNull())
+          .addColumn("note", "text", (col) => col.notNull().defaultTo(""))
+          .addUniqueConstraint("notes_game_voter_country_unique", [
+            "game_id",
+            "voterName",
+            "country",
+          ])
+          .execute(),
+      ];
+    },
+
+    async down(db) {
+      await db.schema.dropTable("notes").ifExists().execute();
+    },
+  },
 } satisfies Migrations;
