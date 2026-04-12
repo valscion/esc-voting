@@ -77,7 +77,7 @@ export function RatingHistogram({ votes, songs, total }: RatingHistogramProps) {
               {flags.length > 0 && (
                 <div className="mt-1 ml-10 flex flex-wrap gap-0.5 text-sm leading-tight">
                   {flags.map((flag, i) => (
-                    <span key={i}>{flag}</span>
+                    <span key={`${flag}-${i}`}>{flag}</span>
                   ))}
                 </div>
               )}
