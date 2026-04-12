@@ -117,7 +117,7 @@ export const VotePage = async ({
       />
 
       {songs.length > 0 && (
-        <RatingHistogram votes={voteRecord} total={total} />
+        <RatingHistogram votes={voteRecord} songs={songs} total={total} />
       )}
 
       {songs.length === 0 && (
