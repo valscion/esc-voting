@@ -43,7 +43,7 @@ export const DashboardPage = async ({
   const songs = await getSongs(game.id);
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
+    <main className="mx-auto max-w-6xl px-6 py-10">
       <nav className="mb-8">
         <a
           href={`/${token}`}
@@ -66,6 +66,8 @@ export const DashboardPage = async ({
           artist: s.artist,
           song: s.song,
           flag: s.flag,
+          semifinal: s.semifinal,
+          semifinalHalf: s.semifinalHalf,
         }))}
         escYear={game.escYear}
       />
