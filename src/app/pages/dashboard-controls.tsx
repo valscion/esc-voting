@@ -200,7 +200,7 @@ export function DashboardControls({ gameId, songs, escYear }: DashboardControlsP
     ? Math.round(tvProgress.playedFraction * 100)
     : 0;
 
-  const groups = montageOrder ? null : groupSongs(displaySongs);
+  const groups = groupSongs(displaySongs);
 
   return (
     <div className="mt-8">
@@ -404,7 +404,7 @@ export function DashboardControls({ gameId, songs, escYear }: DashboardControlsP
         </ul>
       ) : (
         /* Song grid grouped by semifinal halves */
-        groups!.map((group, groupIdx) => (
+        groups.map((group, groupIdx) => (
           <div key={group.key}>
             {/* Group separator */}
             {groupIdx > 0 && (
