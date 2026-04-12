@@ -6,9 +6,10 @@ import { closeGame, deleteGame } from "@/app/actions";
 interface GameControlsProps {
   token: string;
   closed: boolean;
+  hideDeleteButton?: boolean;
 }
 
-export function GameControls({ token, closed }: GameControlsProps) {
+export function GameControls({ token, closed, hideDeleteButton }: GameControlsProps) {
   const [isPending, startTransition] = useTransition();
 
   const handleClose = () => {
@@ -41,14 +42,16 @@ export function GameControls({ token, closed }: GameControlsProps) {
         </button>
       )}
 
-      <button
-        type="button"
-        onClick={handleDelete}
-        disabled={isPending}
-        className={`rounded-2xl border border-red-700 bg-red-950/40 px-5 py-2.5 text-sm font-medium text-red-300 transition-all hover:bg-red-950/70 ${isPending ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-      >
-        🗑️ Delete game
-      </button>
+      {!hideDeleteButton && (
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={isPending}
+          className={`rounded-2xl border border-red-700 bg-red-950/40 px-5 py-2.5 text-sm font-medium text-red-300 transition-all hover:bg-red-950/70 ${isPending ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+        >
+          🗑️ Delete game
+        </button>
+      )}
     </div>
   );
 }

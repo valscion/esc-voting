@@ -1,4 +1,4 @@
-import { getGameByToken, getResultsByScore } from "@/app/data";
+import { getGameByToken, getResultsByScore, getVoters, getAllVotes } from "@/app/data";
 import { getSongsForYear } from "@/app/shared/constants";
 import { DashboardControls } from "./dashboard-controls";
 import { GameControls } from "./game-controls";
@@ -29,19 +29,31 @@ export const DashboardPage = async ({
     );
   }
 
+  const songs = getSongsForYear(game.escYear);
+  const [voters, votes] = await Promise.all([
+    getVoters(game.id),
+    getAllVotes(game.id),
+  ]);
+  const totalSongs = songs.length;
+  const hideDeleteButton =
+    voters.length >= 4 &&
+    totalSongs > 0 &&
+    voters.every((voter) => {
+      const voterVoteCount = votes.filter((v) => v.voter === voter.name).length;
+      return voterVoteCount >= totalSongs;
+    });
+
   if (game.closed) {
     const results = await getResultsByScore(game.id, game.escYear);
     return (
       <main>
         <ResultsReveal token={token} results={results} />
         <div className="mx-auto max-w-4xl px-6 pb-10">
-          <GameControls token={token} closed={true} />
+          <GameControls token={token} closed={true} hideDeleteButton={hideDeleteButton} />
         </div>
       </main>
     );
   }
-
-  const songs = getSongsForYear(game.escYear);
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -89,7 +101,7 @@ export const DashboardPage = async ({
         escYear={game.escYear}
       />
 
-      <GameControls token={token} closed={false} />
+      <GameControls token={token} closed={false} hideDeleteButton={hideDeleteButton} />
     </main>
   );
 };
