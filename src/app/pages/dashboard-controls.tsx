@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useSyncedState } from "rwsdk/use-synced-state/client";
-import { ESC_MONTAGE_DATA } from "@/app/shared/constants";
+import { ESC_MONTAGE_DATA, type CountryCode } from "@/app/shared/constants";
 import { MontagePlayer } from "./montage-player";
 
 interface SongInfo {
+  code: CountryCode;
   country: string;
   artist: string;
   song: string;

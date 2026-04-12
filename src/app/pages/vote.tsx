@@ -1,11 +1,11 @@
 import {
   getGameByToken,
-  getSongs,
   getVotesForVoter,
   getAssumedVotesForVoter,
   RATINGS,
   type RatingEmoji,
 } from "@/app/data";
+import { getSongsForYear } from "@/app/shared/constants";
 import { VoteSongList } from "./vote-song-list";
 
 export const VotePage = async ({
@@ -36,10 +36,8 @@ export const VotePage = async ({
 
   const isClosed = !!game.closed;
 
-  const [songs, votes] = await Promise.all([
-    getSongs(game.id),
-    getVotesForVoter(game.id, voterName),
-  ]);
+  const songs = getSongsForYear(game.escYear);
+  const votes = await getVotesForVoter(game.id, voterName);
 
   const voteRecord: Record<string, RatingEmoji> = {};
   for (const v of votes) {
@@ -48,7 +46,7 @@ export const VotePage = async ({
 
   // When the game is closed, compute assumed votes for unrated songs
   const assumedVotes: Record<string, RatingEmoji> = isClosed
-    ? await getAssumedVotesForVoter(game.id, voterName)
+    ? await getAssumedVotesForVoter(game.id, voterName, game.escYear)
     : {};
 
   const rated = votes.length;

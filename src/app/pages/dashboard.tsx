@@ -1,4 +1,5 @@
-import { getGameByToken, getSongs, getResultsByScore } from "@/app/data";
+import { getGameByToken, getResultsByScore } from "@/app/data";
+import { getSongsForYear } from "@/app/shared/constants";
 import { DashboardControls } from "./dashboard-controls";
 import { GameControls } from "./game-controls";
 import { ResultsReveal } from "./results-reveal";
@@ -29,7 +30,7 @@ export const DashboardPage = async ({
   }
 
   if (game.closed) {
-    const results = await getResultsByScore(game.id);
+    const results = await getResultsByScore(game.id, game.escYear);
     return (
       <main>
         <ResultsReveal token={token} results={results} />
@@ -40,7 +41,7 @@ export const DashboardPage = async ({
     );
   }
 
-  const songs = await getSongs(game.id);
+  const songs = getSongsForYear(game.escYear);
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -62,6 +63,7 @@ export const DashboardPage = async ({
       <DashboardControls
         gameId={game.id}
         songs={songs.map((s) => ({
+          code: s.code,
           country: s.country,
           artist: s.artist,
           song: s.song,
