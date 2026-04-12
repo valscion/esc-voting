@@ -82,10 +82,10 @@ export async function createGame(
     semifinal: s.semifinal,
     semifinalHalf: s.semifinalHalf,
   }));
-  for (let i = 0; i < songValues.length; i += 10) {
+  for (let i = 0; i < songValues.length; i += 5) {
     await db
       .insertInto("songs")
-      .values(songValues.slice(i, i + 10))
+      .values(songValues.slice(i, i + 5))
       .execute();
   }
 
