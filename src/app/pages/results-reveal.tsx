@@ -159,7 +159,7 @@ export function ResultsReveal({ token, results }: ResultsRevealProps) {
         {!allRevealed ? (
           <button
             type="button"
-            onClick={() => setRevealedCount((c) => c + 1)}
+            onClick={() => { setRevealedCount((c) => c + 1); window.scrollTo(0, 0); }}
             className="rounded-2xl bg-indigo-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:bg-indigo-500 hover:shadow-xl active:scale-95"
           >
             {revealedCount === totalGroups - 1

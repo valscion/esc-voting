@@ -1,4 +1,4 @@
-import { type Migrations } from "rwsdk/db";
+import { type Migrations, sql } from "rwsdk/db";
 
 export const migrations = {
   "001_initial_schema": {
@@ -117,6 +117,71 @@ export const migrations = {
       await db.schema
         .alterTable("games")
         .dropColumn("escYear")
+        .execute();
+    },
+  },
+  "005_add_semifinal_fields": {
+    async up(db) {
+      return [
+        await db.schema
+          .alterTable("songs")
+          .addColumn("semifinal", "integer", (col) =>
+            col.notNull().defaultTo(1),
+          )
+          .execute(),
+
+        await db.schema
+          .alterTable("songs")
+          .addColumn("semifinalHalf", "integer", (col) =>
+            col.notNull().defaultTo(1),
+          )
+          .execute(),
+      ];
+    },
+
+    async down(db) {
+      await db.schema.alterTable("songs").dropColumn("semifinal").execute();
+      await db.schema
+        .alterTable("songs")
+        .dropColumn("semifinalHalf")
+        .execute();
+    },
+  },
+  "006_drop_songs_table": {
+    async up(db) {
+      // Eradicate all existing game data (app not yet in production)
+      await sql`DELETE FROM votes`.execute(db);
+      await sql`DELETE FROM voters`.execute(db);
+      await sql`DELETE FROM games`.execute(db);
+      // Songs are now served from constants keyed by ESC year
+      await db.schema.dropTable("songs").ifExists().execute();
+    },
+
+    async down(db) {
+      await db.schema
+        .createTable("songs")
+        .ifNotExists()
+        .addColumn("id", "text", (col) => col.primaryKey())
+        .addColumn("game_id", "text", (col) => col.notNull())
+        .addColumn("country", "text", (col) => col.notNull())
+        .addColumn("artist", "text", (col) => col.notNull())
+        .addColumn("song", "text", (col) => col.notNull())
+        .addColumn("flag", "text", (col) => col.notNull().defaultTo("🏳️"))
+        .addColumn("runningOrder", "integer", (col) =>
+          col.notNull().defaultTo(0),
+        )
+        .addColumn("youtubeId", "text", (col) =>
+          col.notNull().defaultTo(""),
+        )
+        .addColumn("durationSec", "integer", (col) =>
+          col.notNull().defaultTo(0),
+        )
+        .addColumn("semifinal", "integer", (col) =>
+          col.notNull().defaultTo(1),
+        )
+        .addColumn("semifinalHalf", "integer", (col) =>
+          col.notNull().defaultTo(1),
+        )
         .execute();
     },
   },

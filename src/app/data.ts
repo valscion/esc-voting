@@ -4,15 +4,16 @@
  * Uses Cloudflare Durable Objects (via rwsdk/db + Kysely) for persistence.
  *
  * Tables:
- *   games   – id, token, closed, created_at
- *   songs   – id, game_id, country, artist, song, flag, runningOrder, youtubeId, durationSec
+ *   games   – id, token, closed, created_at, escYear
  *   voters  – id, game_id, name
- *   votes   – id, game_id, voterName, country, rating
+ *   votes   – id, game_id, voterName, country (3-letter ISO code), rating
+ *
+ * Song data is served from constants keyed by ESC year (no songs table).
  */
 
 import { db } from "@/db";
 import type { Game, Song, Voter, Vote, RatingEmoji } from "@/app/shared/constants";
-import { ESC_SONGS, DEFAULT_ESC_YEAR, RATING_SCORES } from "@/app/shared/constants";
+import { getSongsForYear, DEFAULT_ESC_YEAR, RATING_SCORES } from "@/app/shared/constants";
 import { computeMedianScore, scoreToEmoji } from "@/app/shared/scoring";
 
 export type { Game, Song, Voter, Vote, RatingEmoji };
@@ -68,25 +69,6 @@ export async function createGame(
     .values({ id: gameId, token, closed: 0, created_at: now, escYear })
     .execute();
 
-  // Insert songs from the constant set, in batches (SQLite variable limit)
-  const songValues = ESC_SONGS.map((s, i) => ({
-    id: crypto.randomUUID(),
-    game_id: gameId,
-    country: s.country,
-    artist: s.artist,
-    song: s.song,
-    flag: s.flag,
-    runningOrder: i + 1,
-    youtubeId: s.youtubeId,
-    durationSec: s.durationSec,
-  }));
-  for (let i = 0; i < songValues.length; i += 10) {
-    await db
-      .insertInto("songs")
-      .values(songValues.slice(i, i + 10))
-      .execute();
-  }
-
   // Insert voters
   for (const name of voterNames) {
     await db
@@ -125,30 +107,10 @@ export async function closeGame(gameId: string): Promise<void> {
 export async function deleteGame(gameId: string): Promise<void> {
   await db.deleteFrom("votes").where("game_id", "=", gameId).execute();
   await db.deleteFrom("voters").where("game_id", "=", gameId).execute();
-  await db.deleteFrom("songs").where("game_id", "=", gameId).execute();
   await db.deleteFrom("games").where("id", "=", gameId).execute();
 }
 
 // --- Game-scoped queries ---
-
-export async function getSongs(gameId: string): Promise<Song[]> {
-  const rows = await db
-    .selectFrom("songs")
-    .selectAll()
-    .where("game_id", "=", gameId)
-    .orderBy("runningOrder", "asc")
-    .execute();
-  return rows.map((r) => ({
-    id: r.id,
-    country: r.country,
-    artist: r.artist,
-    song: r.song,
-    flag: r.flag,
-    runningOrder: r.runningOrder,
-    youtubeId: r.youtubeId,
-    durationSec: r.durationSec,
-  }));
-}
 
 export async function getVoters(gameId: string): Promise<Voter[]> {
   const rows = await db
@@ -246,40 +208,41 @@ export interface SongResult {
  * For each unrated song, the assumed score is the median of all scores given
  * by other voters, rounded down to the nearest emoji score.
  *
- * Returns a record mapping country → assumed RatingEmoji. Only includes
+ * Returns a record mapping country code → assumed RatingEmoji. Only includes
  * entries for songs that have at least one real vote from another voter.
  */
 export async function getAssumedVotesForVoter(
   gameId: string,
   voterName: string,
+  escYear: number,
 ): Promise<Record<string, RatingEmoji>> {
-  const [songs, allVotes, voterVotes] = await Promise.all([
-    getSongs(gameId),
+  const songs = getSongsForYear(escYear);
+  const [allVotes, voterVotes] = await Promise.all([
     getAllVotes(gameId),
     getVotesForVoter(gameId, voterName),
   ]);
 
-  // Countries this voter already rated
-  const ratedCountries = new Set(voterVotes.map((v) => v.country));
+  // Country codes this voter already rated
+  const ratedCodes = new Set(voterVotes.map((v) => v.country));
 
-  // Build a map of country → all votes
-  const votesByCountry = new Map<string, Vote[]>();
+  // Build a map of country code → all votes
+  const votesByCode = new Map<string, Vote[]>();
   for (const v of allVotes) {
-    const list = votesByCountry.get(v.country) ?? [];
+    const list = votesByCode.get(v.country) ?? [];
     list.push(v);
-    votesByCountry.set(v.country, list);
+    votesByCode.set(v.country, list);
   }
 
   const assumed: Record<string, RatingEmoji> = {};
   for (const song of songs) {
-    if (ratedCountries.has(song.country)) continue;
+    if (ratedCodes.has(song.code)) continue;
 
-    const songVotes = votesByCountry.get(song.country) ?? [];
+    const songVotes = votesByCode.get(song.code) ?? [];
     if (songVotes.length === 0) continue;
 
     const scores = songVotes.map((v) => RATING_SCORES[v.rating] ?? 0);
     const medianScore = computeMedianScore(scores);
-    assumed[song.country] = scoreToEmoji(medianScore);
+    assumed[song.code] = scoreToEmoji(medianScore);
   }
 
   return assumed;
@@ -294,26 +257,27 @@ export async function getAssumedVotesForVoter(
  */
 export async function getResultsByScore(
   gameId: string,
+  escYear: number,
 ): Promise<{ score: number; songs: SongResult[] }[]> {
-  const [songs, votes, voters] = await Promise.all([
-    getSongs(gameId),
+  const songs = getSongsForYear(escYear);
+  const [votes, voters] = await Promise.all([
     getAllVotes(gameId),
     getVoters(gameId),
   ]);
 
   const voterNames = voters.map((v) => v.name);
 
-  // Build a map of country → votes
-  const votesByCountry = new Map<string, Vote[]>();
+  // Build a map of country code → votes
+  const votesByCode = new Map<string, Vote[]>();
   for (const v of votes) {
-    const list = votesByCountry.get(v.country) ?? [];
+    const list = votesByCode.get(v.country) ?? [];
     list.push(v);
-    votesByCountry.set(v.country, list);
+    votesByCode.set(v.country, list);
   }
 
   // Calculate score for each song
   const songResults: SongResult[] = songs.map((song) => {
-    const songVotes = votesByCountry.get(song.country) ?? [];
+    const songVotes = votesByCode.get(song.code) ?? [];
     const actualBreakdown = songVotes.map((v) => ({
       voter: v.voter,
       emoji: v.rating,

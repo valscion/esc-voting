@@ -1,5 +1,5 @@
-import { getGameByToken, getSongs } from "@/app/data";
-import { ESC_MONTAGE_DATA } from "@/app/shared/constants";
+import { getGameByToken } from "@/app/data";
+import { ESC_MONTAGE_DATA, getSongsForYear } from "@/app/shared/constants";
 import { TVPlayer } from "./tv-player";
 
 export const TVDisplayPage = async ({
@@ -18,7 +18,7 @@ export const TVDisplayPage = async ({
     );
   }
 
-  const songs = await getSongs(game.id);
+  const songs = getSongsForYear(game.escYear);
   const montageData = ESC_MONTAGE_DATA[game.escYear];
 
   return (

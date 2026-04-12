@@ -1,9 +1,9 @@
 import {
   getGameByToken,
   getVoters,
-  getSongs,
   getAllVotes,
 } from "@/app/data";
+import { getSongsForYear } from "@/app/shared/constants";
 
 export const GamePage = async ({
   params,
@@ -30,9 +30,9 @@ export const GamePage = async ({
     );
   }
 
-  const [voters, songs, votes] = await Promise.all([
+  const songs = getSongsForYear(game.escYear);
+  const [voters, votes] = await Promise.all([
     getVoters(game.id),
-    getSongs(game.id),
     getAllVotes(game.id),
   ]);
 
