@@ -10,6 +10,7 @@ import {
 import { getSongsForYear } from "@/app/shared/constants";
 import { VoteSongList } from "./vote-song-list";
 import { VoterExportButtons } from "./export-buttons";
+import { RatingHistogram } from "./rating-histogram";
 
 export const VotePage = async ({
   params,
@@ -121,6 +122,10 @@ export const VotePage = async ({
         notes={voterNotes}
         isClosed={isClosed}
       />
+
+      {songs.length > 0 && (
+        <RatingHistogram votes={voteRecord} songs={songs} total={total} />
+      )}
 
       {songs.length === 0 && (
         <p className="mt-8 text-gray-500">No songs found.</p>
