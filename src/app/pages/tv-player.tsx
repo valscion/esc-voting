@@ -50,7 +50,8 @@ function getCountryAtTime(
 }
 
 export function TVPlayer({ gameId, songs, montageYoutubeId, montageTimestamps }: TVPlayerProps) {
-  const playerRef = useRef<HTMLVideoElement>(null);
+  const playerRef = useRef<HTMLVideoElement | null>(null);
+  const lastMontageCountryRef = useRef<string | null>(null);
 
   // Synced state — read
   const [activeSong, setActiveSong] = useSyncedState<string | null>(
@@ -80,8 +81,6 @@ export function TVPlayer({ gameId, songs, montageYoutubeId, montageTimestamps }:
   const [playing, setPlaying] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [overlayFading, setOverlayFading] = useState(false);
-  const overlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastMontageCountryRef = useRef<string | null>(null);
 
   // Find the current song
   const currentSong = activeSong
@@ -98,61 +97,79 @@ export function TVPlayer({ gameId, songs, montageYoutubeId, montageTimestamps }:
       ? `https://www.youtube.com/watch?v=${currentSong.youtubeId}`
       : null;
 
-  // Show overlay when activeSong changes
-  useEffect(() => {
-    if (!activeSong) {
-      setShowOverlay(false);
-      return;
-    }
+  // --- State adjustments during render ---
+  // This follows React's documented "adjusting state when a prop changes"
+  // pattern to avoid set-state-in-effect lint violations.
 
-    setShowOverlay(true);
+  // React to activeSong changes: reset overlay, auto-play in song mode
+  const [prevActiveSong, setPrevActiveSong] = useState<string | null>(null);
+  if (activeSong !== prevActiveSong) {
+    setPrevActiveSong(activeSong);
     setOverlayFading(false);
-
-    if (overlayTimerRef.current) {
-      clearTimeout(overlayTimerRef.current);
+    if (activeSong) {
+      setShowOverlay(true);
+      if (!isMontageMode) {
+        setPlaying(true);
+      }
+    } else {
+      setShowOverlay(false);
     }
+  }
 
-    // Start fading out after 3 seconds
-    overlayTimerRef.current = setTimeout(() => {
+  // React to tvPlayback play/pause commands
+  const [prevPlayback, setPrevPlayback] = useState<TVPlayback | null>(null);
+  if (tvPlayback !== prevPlayback) {
+    setPrevPlayback(tvPlayback);
+    if (tvPlayback?.command === "play") {
+      setPlaying(true);
+    } else if (tvPlayback?.command === "pause") {
+      setPlaying(false);
+    }
+  }
+
+  // --- Effects for external system interaction only ---
+
+  // Overlay fade-out timer (browser timer = external system)
+  useEffect(() => {
+    if (!activeSong) return;
+
+    const fadeTimer = setTimeout(() => {
       setOverlayFading(true);
-      // Remove after fade animation (1 second)
-      overlayTimerRef.current = setTimeout(() => {
-        setShowOverlay(false);
-      }, 1000);
     }, 3000);
 
+    const hideTimer = setTimeout(() => {
+      setShowOverlay(false);
+    }, 4000);
+
     return () => {
-      if (overlayTimerRef.current) {
-        clearTimeout(overlayTimerRef.current);
-      }
+      clearTimeout(fadeTimer);
+      clearTimeout(hideTimer);
     };
   }, [activeSong]);
 
-  // Auto-play when a new song starts (song mode)
+  // Handle seek commands (needs DOM ref access, which is allowed in effects)
   useEffect(() => {
-    if (!isMontageMode && currentSong?.youtubeId) {
-      setPlaying(true);
-    }
-  }, [activeSong, isMontageMode, currentSong?.youtubeId]);
-
-  // Respond to tvPlayback commands
-  useEffect(() => {
-    if (!tvPlayback) return;
-
-    switch (tvPlayback.command) {
-      case "play":
-        setPlaying(true);
-        break;
-      case "pause":
-        setPlaying(false);
-        break;
-      case "seek":
-        if (tvPlayback.seekTo !== undefined && playerRef.current) {
-          playerRef.current.currentTime = tvPlayback.seekTo;
-        }
-        break;
+    if (
+      tvPlayback?.command === "seek" &&
+      tvPlayback.seekTo !== undefined &&
+      playerRef.current
+    ) {
+      playerRef.current.currentTime = tvPlayback.seekTo;
     }
   }, [tvPlayback]);
+
+  // youtube-video-element sets `config` as a property via useLayoutEffect AFTER
+  // the first load() has already created the iframe without it. Using a callback
+  // ref with a microtask ensures load() fires after layout effects have applied
+  // the config (origin + referrerpolicy) to the element.
+  const playerRefCallback = useCallback((el: HTMLVideoElement | null) => {
+    playerRef.current = el;
+    if (el) {
+      Promise.resolve().then(() =>
+        (el as HTMLVideoElement & { load?: () => void }).load?.(),
+      );
+    }
+  }, []);
 
   // Handle timeupdate for progress reporting and montage song tracking
   const handleTimeUpdate = useCallback(() => {
@@ -217,7 +234,7 @@ export function TVPlayer({ gameId, songs, montageYoutubeId, montageTimestamps }:
     <div className="relative h-screen w-screen bg-black">
       {/* Video player */}
       <ReactPlayer
-        ref={playerRef}
+        ref={playerRefCallback}
         src={videoUrl}
         playing={playing}
         controls={false}

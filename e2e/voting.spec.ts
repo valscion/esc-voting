@@ -739,6 +739,31 @@ test.describe("ESC Voting App", () => {
       );
     });
 
+    test("dashboard montage shows prev and next buttons when playing", async ({
+      page,
+    }) => {
+      const token = await createGame(page);
+
+      await gotoAndHydrate(page, `/${token}/dashboard`);
+
+      // Prev/Next should not be visible before starting montage
+      await expect(page.getByText("⏮ Prev")).not.toBeVisible();
+      await expect(page.getByText("Next ⏭")).not.toBeVisible();
+
+      // Start montage
+      await page.getByText("▶️ Play Montage").click();
+      await expect(page.getByText("⏹ Stop Montage")).toBeVisible();
+
+      // Prev/Next buttons should now be visible
+      await expect(page.getByText("⏮ Prev")).toBeVisible();
+      await expect(page.getByText("Next ⏭")).toBeVisible();
+
+      // Stop montage — Prev/Next should disappear
+      await page.getByText("⏹ Stop Montage").click();
+      await expect(page.getByText("⏮ Prev")).not.toBeVisible();
+      await expect(page.getByText("Next ⏭")).not.toBeVisible();
+    });
+
     test("dashboard song selection syncs to TV display via useSyncedState", async ({
       browser,
     }) => {
@@ -762,7 +787,6 @@ test.describe("ESC Voting App", () => {
       const firstSongButton = dashboardPage
         .locator("button[data-song-country]")
         .first();
-      const country = await firstSongButton.getAttribute("data-song-country");
       await firstSongButton.click();
       await expect(firstSongButton).toHaveAttribute("aria-pressed", "true");
 

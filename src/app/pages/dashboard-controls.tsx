@@ -145,6 +145,51 @@ export function DashboardControls({ gameId, songs, escYear }: DashboardControlsP
     }
   };
 
+  /**
+   * Seek the montage to the previous song's timestamp.
+   * Finds the entry before the current playback position and seeks there.
+   */
+  const handleMontagePrev = () => {
+    if (!montageData || !tvProgress) return;
+    const currentSec = tvProgress.playedSeconds;
+    const timestamps = montageData.timestamps;
+
+    // Find the last timestamp that is at least 3 seconds before current position.
+    // The 3s threshold avoids getting stuck at the start of the current song.
+    let prevIdx = -1;
+    for (let i = timestamps.length - 1; i >= 0; i--) {
+      if (timestamps[i].startSec < currentSec - 3) {
+        prevIdx = i;
+        break;
+      }
+    }
+    if (prevIdx >= 0) {
+      setTvPlayback({ command: "seek", seekTo: timestamps[prevIdx].startSec });
+      setIsPaused(false);
+    } else {
+      // Already at the beginning — seek to 0
+      setTvPlayback({ command: "seek", seekTo: 0 });
+      setIsPaused(false);
+    }
+  };
+
+  /**
+   * Seek the montage to the next song's timestamp.
+   * Finds the entry after the current playback position and seeks there.
+   */
+  const handleMontageNext = () => {
+    if (!montageData || !tvProgress) return;
+    const currentSec = tvProgress.playedSeconds;
+    const timestamps = montageData.timestamps;
+
+    // Find the first timestamp after the current position
+    const nextEntry = timestamps.find((t) => t.startSec > currentSec + 1);
+    if (nextEntry) {
+      setTvPlayback({ command: "seek", seekTo: nextEntry.startSec });
+      setIsPaused(false);
+    }
+  };
+
   const progressPercent = tvProgress
     ? Math.round(tvProgress.playedFraction * 100)
     : 0;
@@ -155,7 +200,7 @@ export function DashboardControls({ gameId, songs, escYear }: DashboardControlsP
     <div className="mt-8">
       {/* Montage controls */}
       {montageData && (
-        <div className="mb-6">
+        <div className="mb-6 flex items-center gap-2">
           <button
             type="button"
             onClick={handleMontageToggle}
@@ -167,6 +212,24 @@ export function DashboardControls({ gameId, songs, escYear }: DashboardControlsP
           >
             {tvMode === "montage" ? "⏹ Stop Montage" : "▶️ Play Montage"}
           </button>
+          {tvMode === "montage" && (
+            <>
+              <button
+                type="button"
+                onClick={handleMontagePrev}
+                className="rounded-2xl border border-gray-700 bg-gray-900 px-4 py-3 text-sm font-medium text-gray-400 transition-all hover:border-amber-600 hover:text-amber-300"
+              >
+                ⏮ Prev
+              </button>
+              <button
+                type="button"
+                onClick={handleMontageNext}
+                className="rounded-2xl border border-gray-700 bg-gray-900 px-4 py-3 text-sm font-medium text-gray-400 transition-all hover:border-amber-600 hover:text-amber-300"
+              >
+                Next ⏭
+              </button>
+            </>
+          )}
         </div>
       )}
 
