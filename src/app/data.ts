@@ -5,7 +5,7 @@
  *
  * Tables:
  *   games   – id, token, closed, created_at
- *   songs   – id, game_id, country, artist, song, flag, runningOrder, youtubeId, durationSec
+ *   songs   – id, game_id, country, artist, song, flag, runningOrder, youtubeId, durationSec, semifinal, semifinalHalf
  *   voters  – id, game_id, name
  *   votes   – id, game_id, voterName, country, rating
  */
@@ -79,11 +79,15 @@ export async function createGame(
     runningOrder: i + 1,
     youtubeId: s.youtubeId,
     durationSec: s.durationSec,
+    semifinal: s.semifinal,
+    semifinalHalf: s.semifinalHalf,
   }));
-  for (let i = 0; i < songValues.length; i += 10) {
+  // Insert songs from the constant set, in batches of 5 to stay under
+  // Cloudflare Workers SQLite bound-variable limit (12 columns × 5 = 60 vars).
+  for (let i = 0; i < songValues.length; i += 5) {
     await db
       .insertInto("songs")
-      .values(songValues.slice(i, i + 10))
+      .values(songValues.slice(i, i + 5))
       .execute();
   }
 
@@ -147,6 +151,8 @@ export async function getSongs(gameId: string): Promise<Song[]> {
     runningOrder: r.runningOrder,
     youtubeId: r.youtubeId,
     durationSec: r.durationSec,
+    semifinal: r.semifinal,
+    semifinalHalf: r.semifinalHalf,
   }));
 }
 

@@ -120,4 +120,31 @@ export const migrations = {
         .execute();
     },
   },
+  "005_add_semifinal_fields": {
+    async up(db) {
+      return [
+        await db.schema
+          .alterTable("songs")
+          .addColumn("semifinal", "integer", (col) =>
+            col.notNull().defaultTo(1),
+          )
+          .execute(),
+
+        await db.schema
+          .alterTable("songs")
+          .addColumn("semifinalHalf", "integer", (col) =>
+            col.notNull().defaultTo(1),
+          )
+          .execute(),
+      ];
+    },
+
+    async down(db) {
+      await db.schema.alterTable("songs").dropColumn("semifinal").execute();
+      await db.schema
+        .alterTable("songs")
+        .dropColumn("semifinalHalf")
+        .execute();
+    },
+  },
 } satisfies Migrations;
