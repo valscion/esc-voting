@@ -1,5 +1,4 @@
-import { type Migrations } from "rwsdk/db";
-import { sql } from "kysely";
+import { type Migrations, sql } from "rwsdk/db";
 
 export const migrations = {
   "001_initial_schema": {

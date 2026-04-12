@@ -139,7 +139,7 @@ export const ESC_MONTAGE_DATA: Record<number, MontageData> = {
  *         https://static.eurovisionworld.com/js/voting/181.js (SF1 running order)
  *         https://static.eurovisionworld.com/js/voting/182.js (SF2 running order)
  */
-export const ESC_SONGS_BY_YEAR: Record<number, readonly Song[]> = {
+export const ESC_SONGS_BY_YEAR = {
   2026: [
     // ── Semi-final 1 · First half ──────────────────────────────
     { code: "MDA", country: "Moldova", artist: "Satoshi", song: "Viva, Moldova", flag: "🇲🇩", youtubeId: "k340WWX6zHk", durationSec: 174, semifinal: 1, semifinalHalf: 1 },
@@ -184,12 +184,16 @@ export const ESC_SONGS_BY_YEAR: Record<number, readonly Song[]> = {
     { code: "MLT", country: "Malta", artist: "Aidan", song: "Bella", flag: "🇲🇹", youtubeId: "YA7Ku_P59Dk", durationSec: 177, semifinal: 2, semifinalHalf: 2 },
     { code: "NOR", country: "Norway", artist: "Jonas Lovv", song: "Ya ya ya", flag: "🇳🇴", youtubeId: "MasllzWk_bQ", durationSec: 169, semifinal: 2, semifinalHalf: 2 },
   ],
-};
+} as const satisfies Record<number, readonly Song[]>;
+
+/** Union of all 3-letter ISO country codes across all ESC years. */
+export type CountryCode =
+  (typeof ESC_SONGS_BY_YEAR)[keyof typeof ESC_SONGS_BY_YEAR][number]["code"];
 
 /**
  * Get the list of songs for a given ESC year from the constants.
  * Returns an empty array if the year has no song data.
  */
 export function getSongsForYear(year: number): readonly Song[] {
-  return ESC_SONGS_BY_YEAR[year] ?? [];
+  return (ESC_SONGS_BY_YEAR as Record<number, readonly Song[]>)[year] ?? [];
 }
