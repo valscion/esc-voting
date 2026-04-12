@@ -69,6 +69,11 @@ export interface Vote {
 export const DEFAULT_ESC_YEAR = 2026;
 
 /**
+ * Maximum characters allowed for a song note (tweet-sized).
+ */
+export const MAX_NOTE_LENGTH = 280;
+
+/**
  * Montage video data keyed by ESC year.
  *
  * Each entry contains the YouTube video ID for the montage and a timestamp

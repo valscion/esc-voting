@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { submitNote } from "@/app/actions";
 import type { CountryCode } from "@/app/shared/constants";
+import { MAX_NOTE_LENGTH } from "@/app/shared/constants";
 
 interface NoteEditorProps {
   gameId: string;
@@ -43,7 +44,7 @@ export function NoteEditor({
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          maxLength={280}
+          maxLength={MAX_NOTE_LENGTH}
           rows={2}
           placeholder="Add a note about this song…"
           className="w-full resize-none rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:border-indigo-500 focus:outline-none"
@@ -51,7 +52,7 @@ export function NoteEditor({
         />
         <div className="flex items-center justify-between">
           <span className="text-xs text-gray-600">
-            {note.length}/280
+            {note.length}/{MAX_NOTE_LENGTH}
           </span>
           <div className="flex gap-2">
             <button

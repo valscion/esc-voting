@@ -10,6 +10,7 @@ import {
   upsertNote,
   type RatingEmoji,
 } from "@/app/data";
+import { MAX_NOTE_LENGTH } from "@/app/shared/constants";
 
 export const createGame = serverAction(
   async (voterNames: string[]): Promise<Response> => {
@@ -55,8 +56,8 @@ export const submitNote = serverAction(
     country: string,
     note: string,
   ): Promise<void> => {
-    // Enforce tweet-sized max (280 chars)
-    const trimmed = note.slice(0, 280);
+    // Enforce tweet-sized max
+    const trimmed = note.slice(0, MAX_NOTE_LENGTH);
     await upsertNote(gameId, voter, country, trimmed);
   },
 );
