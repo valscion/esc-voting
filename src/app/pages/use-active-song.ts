@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncedState } from "rwsdk/use-synced-state/client";
+import { useSyncedState } from "./use-reconnecting-synced-state";
 
 export function useActiveSong(gameId: string): string | null {
   const [activeSong] = useSyncedState<string | null>(
